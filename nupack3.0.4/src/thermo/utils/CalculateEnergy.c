@@ -235,28 +235,60 @@ z
   int *nucs_Behind_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
   int nucs_Behind_SL_Count =0;
   int *nucs_Front_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Front_SL_Count =0;
+  int nucs_Front_SL_Count =nucsLenght;
 
   //large to small
   int *nucs_Behind_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
   int nucs_Behind_LS_Count =0;
   int *nucs_Front_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Front_LS_Count =0;
+  int nucs_Front_LS_Count =nucsLenght;
 
   int *gapNucs = (int*) calloc( thefold->seqlength+1, sizeof(int));
   int gapNucs_Count =0;
 
+  int *pairsTracker = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int pairsTracker_Count =0;
+
+  int indexToAdd = -1;
+
+
+  int nucsLenght= thefold->seqlength;
+  int *nucs_Behind_SL_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Behind_SL_Test_Count =0;
+  int *nucs_Front_Test_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Front_Test_SL_Count =nucsLenght;
+
+  //large to small
+  int *nucs_Behind_Test_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Behind_Test_LS_Count =0;
+  int *nucs_Front_Test_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Front_Test_LS_Count =nucsLenght;
+
+  int *gapNucs_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int gapNucs_Test_Count =0;
+
+  int *pairsTracker_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int pairsTracker_Test_Count =0;
+
+  int indexToAdd = -1;
   //initialize nucs front list
   for (int index = 1; index <= nucsLenght, nucsLenght++)
   {
     nucs_Front_SL[index] = index;
+    
     nucs_Front_LS[index] = index;
-    nucs_Behind_SL[index] = -1;
+    nucs_Behind_SL[index] = -1;    
     nucs_Behind_LS[index] = -1;
     gapNucs[index] = -1;
+    pairsTracker[index] = -1;
   }
 
   bool inGap = FALSE;
+  bool inStack = FALSE;
+  bool inStack_nextNuc = FALSE;
+  bool isPknot_suspected = FALSE;
+  bool isPknot_confident = FALSE;
+
 
   while (noPair_NextNuc == TRUE)
   { 
@@ -264,16 +296,26 @@ z
     //this is the entry for each nuc and stuff happens
     //now act on searchNuc_index nucleotide
 
+    //get the  actual nuc number and th complementary pair
+    int actualNuc = searchNuc_index+1;
+    searchNuc_compPair = thefold->pairs[searchNuc_index];
+    int actualNuc_compPair = searchNuc_compPair+1;
+
     //add the last nuc to the list
     //add to the list immediatly when it is hit
-    int indexToAdd = nucsLenght-nucs_Behind_SL_Count;
-    int actualNuc = searchNuc_index+1;
+    indexToAdd = nucsLenght-nucs_Behind_SL_Count;
     nucs_Behind_LS[indexToAdd]=actualNuc;
+    nucs_Behind_SL_Count++;
 
     if (inGap==TRUE)
     {
-      indexToAdd = nucsLenght-gapNucs_Count;
-      gapNucs[indexToAdd]=actualNuc;
+      //indexToAdd = nucsLenght-gapNucs_Count;
+      //gapNucs[indexToAdd]=actualNuc;
+    }
+
+    if (inStack==TRUE)
+    {
+
     }
 
     //now remove from the front
@@ -282,15 +324,11 @@ z
       if (nucs_Front_SL[index] == actualNuc)
       {
         nucs_Front_SL[index] = -1;
+        nucs_Front_SL_Count--;
       }
     }
     
-    //now we know what should be behind and ahead
-
-
-    //get the complementary pair
-    searchNuc_compPair = thefold->pairs[searchNuc_index]
-
+    //now we know what should be behind and ahead and what has been found in its gap if applicable
 
     //if not -1 then it is paired if -1 then gap
     if (searchNuc_compPair != -1)
@@ -300,26 +338,116 @@ z
     
     if (isPair==TRUE)
     {
-      //check if next nuc is a pair
-      int nextSearchNuc=searchNuc_index+1;
-      int nextSearchNuc_compPair = thefold->pairs[searchNuc_index];
+      //this nuc is paired so record and poke around poke around
+      indexToAdd = nucsLenght-pairsTracker_Count;
+      pairsTracker[indexToAdd]=searchNuc_index;
+      pairsTracker_Count++;
 
-      if (nextSearchNuc_compPair == -1)
+      indexToAdd = nucsLenght-pairsTracker_Test_Count;
+      pairsTracker_Test[indexToAdd]=searchNuc_index;
+      pairsTracker_Test_Count++;
+
+      //now need to test to see if next makes sense based on trackers
+      bool isValid_inFront = FALSE;
+      for (int index = 1; index <=nucsLenght; index++)
       {
-        //its in a gap so record that
-        inGap=TRUE;
+        if (nucs_Front_SL[index]==nextSearchNuc_compPair)
+        {
+          //its in the listof expected front nucs so its valid ad should be able to loop to next nuck
+          isValid_inFront = TRUE;     
+        }
+      }
+
+
+      bool testNextPair =FALSE; 
+      if ( isValid_inFront==TRUE)
+      {
+        //we are progressing through a normal sequence and stacks
+        //check next nuc pair
+        testNextPair=TRUE;
+      }
+      else
+      {
+        //this is potentially in a pknot 
+        isPknot_suspected=TRUE;
+      }
+      
+      //now check if next nuc after searchNuc_compPair is a pair
+      int nextSearchNuc=searchNuc_index+1;
+      int nextSearchNuc_compPair = thefold->pairs[nextSearchNuc];
+
+      if (testNextPair==TRUE)
+      {
+        if (nextSearchNuc_compPair == -1)
+        {
+          //its in a gap so record that
+          inGap=TRUE;
+          indexToAdd = nucsLenght-gapNucs_Count;
+          gapNucs[indexToAdd]=actualNuc;
+          gapNucs_Count++;
+
+          //should be in a loop now so check nucs
+          //fold should be in expected range after last pairing
+
+          //check if nucpair_compPair isin front
+          isValid_inFront = FALSE;
+          for (int index = 1; index <=nucsLenght; index++)
+          {
+            if (nucs_Front_SL[index]==nextSearchNuc_compPair)
+            {
+              //its in the listof expected front nucs so its valid ad should be able to loop to next nuck
+              isValid_inFront = TRUE;
+
+              //this basicaly would be the equivialant of coming upon a pair while walking a gap and then jumping the pair
+              //the next nucs is a gap and is part of expected nucs so its basically in a lcoal loop            
+            }
+          }
+
+          if(isValid_inFront==TRUE)
+          {
+            //this basicaly would be the equivialant of coming upon a pair while walking a gap and then jumping the pair
+            //the next nucs is a gap and is part of expected nucs so its basically in a lcoal loop   
+
+            //the nucpair is valid as a standard pair as its in the front
+            //set test front array to exclude everything before the next nucsearch_compPair
+            for(int index = 1; index <=nextSearchNuc_compPair, index++)
+            {
+              nucs_Front_Test_SL[index]=-1;
+            } 
+
+          }
+          else
+          {
+            //its not in the expected front so it is probably a pknot but need to test
+            isPknot_suspected=TRUE;
+
+            //this basicaly would be the equivialant of coming upon a pair while walking a gap and then jumping the pair
+            //the next nucs is a pknot
+          }
+        }
+        else
+        {
+          //there is a pair net so figure it out
+          //this is the next nuc pair we are looking at
+          //should be in a stack so walk it and make sure it makes sense
+          //basically repeat while loop now
+          inStack=TRUE;
+          indexToAdd = nucsLenght-pairsTracker_Test_Count;
+          pairsTracker_Test[indexToAdd]=nextSearchNuc_compPair;
+          pairsTracker_Test_Count++;
+          
+        }
 
       }
       else
       {
-        //there is a pair so keep going and loging
+        //no point in testing next pair but need a good reason why
       }
-
-
+     
     }
-
   }
 
+  //at this point the while loop
 
 
   //the following pknot finding routine should be optimized
