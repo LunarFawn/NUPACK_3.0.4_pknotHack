@@ -232,30 +232,61 @@ z
   //SL = Smal to large nuc order, LS = Large to small nuc order
   //Small to large
   int nucsLenght= thefold->seqlength;
-  int *nucs_Behind_SL = (int*) calloc( thefold->seqlength, sizeof(int));
+  int *nucs_Behind_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
   int nucs_Behind_SL_Count =0;
-  int *nucs_Front_SL = (int*) calloc( thefold->seqlength, sizeof(int));
+  int *nucs_Front_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
   int nucs_Front_SL_Count =0;
 
   //large to small
-  int *nucs_Behind_LS = (int*) calloc( thefold->seqlength, sizeof(int));
+  int *nucs_Behind_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
   int nucs_Behind_LS_Count =0;
-  int *nucs_Front_LS = (int*) calloc( thefold->seqlength, sizeof(int));
+  int *nucs_Front_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
   int nucs_Front_LS_Count =0;
 
+  int *gapNucs = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int gapNucs_Count =0;
 
   //initialize nucs front list
+  for (int index = 1; index <= nucsLenght, nucsLenght++)
+  {
+    nucs_Front_SL[index] = index;
+    nucs_Front_LS[index] = index;
+    nucs_Behind_SL[index] = -1;
+    nucs_Behind_LS[index] = -1;
+    gapNucs[index] = -1;
+  }
+
+  bool inGap = FALSE;
 
   while (noPair_NextNuc == TRUE)
   { 
+   
     //this is the entry for each nuc and stuff happens
     //now act on searchNuc_index nucleotide
 
     //add the last nuc to the list
     //add to the list immediatly when it is hit
     int indexToAdd = nucsLenght-nucs_Behind_SL_Count;
-    nucs_Behind_LS[indexToAdd]=searchNuc_index;
+    int actualNuc = searchNuc_index+1;
+    nucs_Behind_LS[indexToAdd]=actualNuc;
+
+    if (inGap==TRUE)
+    {
+      indexToAdd = nucsLenght-gapNucs_Count;
+      gapNucs[indexToAdd]=actualNuc;
+    }
+
+    //now remove from the front
+    for (int index = 1; index <= nucsLenght, nucsLenght++)
+    {
+      if (nucs_Front_SL[index] == actualNuc)
+      {
+        nucs_Front_SL[index] = -1;
+      }
+    }
     
+    //now we know what should be behind and ahead
+
 
     //get the complementary pair
     searchNuc_compPair = thefold->pairs[searchNuc_index]
@@ -276,7 +307,7 @@ z
       if (nextSearchNuc_compPair == -1)
       {
         //its in a gap so record that
-
+        inGap=TRUE;
 
       }
       else
