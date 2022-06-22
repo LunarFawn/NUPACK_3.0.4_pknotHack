@@ -1,0 +1,42 @@
+% NUPACK 3.0
+% Program: mfe
+% Start time: Sun Jun 19 04:52:56 2022
+% Command: ./mfe -T 37 -material rna pknot_Goal 
+% Sequence:  CUAGUAUGGAAAAGUAGAAGAUAUGAAAAAACAUAUCAAAGGGGAAACUAUGAACUACAAAAACAUAGACCCCAACCAUACUAG
+% v(pi): 1
+% Parameters: RNA, 1995
+% Dangles setting: 1
+% Temperature (C): 37.0
+% Sodium concentration: 1.0000 M
+% Magnesium concentration: 0.0000 M
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% %
+84
+-18.600
+(((((((((..........((((((......))))))...((((...(((((...........))))).))))..)))))))))
+1	84
+2	83
+3	82
+4	81
+5	80
+6	79
+7	78
+8	77
+9	76
+20	37
+21	36
+22	35
+23	34
+24	33
+25	32
+41	73
+42	72
+43	71
+44	70
+48	68
+49	67
+50	66
+51	65
+52	64
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% %
+
