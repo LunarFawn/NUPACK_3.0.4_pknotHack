@@ -160,6 +160,65 @@ DBL_TYPE naEnergyPairsOrParensFullWithSym( int *thepairs, char *parens,
 }
 
 
+struct PknotDetectionData
+{ 
+  //main seeking trackers
+  //small to large trackers
+  int* small_behind_y_trackerList;
+  int small_behind_y_trackerList_Count;
+  int* small_front_y_trackerList;
+  int small_front_y_trackerList_Count;
+  
+  //large to small trackers
+  int* large_behind_y_trackerList;
+  int large_behind_y_trackerList_Count;
+  int* large_front_y_trackerList;
+  int large_front_y_trackerList_Count;
+  
+  
+  //gap and trackers 
+  int* gapNucs_trackerList;
+  int gapNucs_trackerList_Count;
+  int* pairsNucs_trackerList;
+  int pairsNucs_trackerList_Count;
+  
+  //utils
+  int nucsLenght;
+  int currentNuc_y;
+  int currentNuc_d;
+  bool isPaired_current_y;
+  bool is_yGRTd_current;
+  bool is_dGRTy_current;
+  
+  int nextNuc_y;
+  int nextNuc_d;
+  bool isPaired_next_y;
+  bool is_yGRTd_next;
+  bool is_dGRTy_next;
+  
+  //loop, bulge, stack, pknot boolean logic variables
+  bool inGap;
+
+  bool isLoop_suspected;
+  bool isLoop_confident;
+  bool isLoop_confirmed;
+
+  bool isBulge_suspected;
+  bool isBulge_confident;
+  bool isBulge_confirmed; 
+ 
+  bool isStack_suspected;
+  bool isStack_confident;
+  bool isStack_confirmed;
+
+  bool isPknot_suspected;
+  bool isPknot_confident;
+  bool isPknot_confirmed;
+};
+
+
+void
+
 
 /* ***************************************************** */
 void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs) {
@@ -286,6 +345,10 @@ z
   bool inGap = FALSE;
   bool inStack = FALSE;
   bool inStack_nextNuc = FALSE;
+
+  //logic for deciding if stack or pknot
+  bool isStack_suspected = FALSE;
+  bool isStack_confident = FALSE;
   bool isPknot_suspected = FALSE;
   bool isPknot_confident = FALSE;
 
@@ -315,7 +378,7 @@ z
 
     if (inStack==TRUE)
     {
-
+      //placeholder for this?
     }
 
     //now remove from the front
@@ -351,7 +414,7 @@ z
       bool isValid_inFront = FALSE;
       for (int index = 1; index <=nucsLenght; index++)
       {
-        if (nucs_Front_SL[index]==nextSearchNuc_compPair)
+        if (nucs_Front_SL[index]==searchNuc_compPair+1)
         {
           //its in the listof expected front nucs so its valid ad should be able to loop to next nuck
           isValid_inFront = TRUE;     
@@ -359,16 +422,18 @@ z
       }
 
 
-      bool testNextPair =FALSE; 
+      
       if ( isValid_inFront==TRUE)
       {
         //we are progressing through a normal sequence and stacks
         //check next nuc pair
-        testNextPair=TRUE;
+        isStack_suspected=TRUE;
+        isPknot_suspected=FALSE;
       }
       else
       {
         //this is potentially in a pknot 
+        isStack_suspected=FALSE;
         isPknot_suspected=TRUE;
       }
       
@@ -376,8 +441,11 @@ z
       int nextSearchNuc=searchNuc_index+1;
       int nextSearchNuc_compPair = thefold->pairs[nextSearchNuc];
 
-      if (testNextPair==TRUE)
+      if (isStack_suspected==TRUE)
       {
+        //most likely in a stack.
+        //this is the fitst nuc inspected and is the current nux
+        //now test the next nuc and if ambiguous then do a oposite direction inspection
         if (nextSearchNuc_compPair == -1)
         {
           //its in a gap so record that
