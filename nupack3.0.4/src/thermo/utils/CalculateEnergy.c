@@ -160,7 +160,7 @@ DBL_TYPE naEnergyPairsOrParensFullWithSym( int *thepairs, char *parens,
 }
 
 
-struct PknotDetectionData
+typedef struct PknotDetectionData
 { 
   //main seeking trackers
   //small to large trackers
@@ -217,7 +217,84 @@ struct PknotDetectionData
 };
 
 
-void
+void InitalizePknotStruct(fold *thefold, PknotDetectionData *tempPknot)
+{
+
+  
+  //new pknot routine
+  
+//main seeking trackers
+  //small to large trackers
+
+  
+  *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.small_behind_y_trackerList_Count = -1;
+  *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.small_front_y_trackerList_Count = -1;
+  
+  //large to small trackers
+  *tempPknot.large_behind_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.large_behind_y_trackerList_Count = -1;
+  *tempPknot.large_front_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.large_front_y_trackerList_Count = -1;
+  
+  
+  //gap and trackers 
+  *tempPknot.gapNucs_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.gapNucs_trackerList_Count = -1;
+  *tempPknot.pairsNucs_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.pairsNucs_trackerList_Count = -1;
+
+
+ int indexToAdd = -1;
+  //initialize nucs front list
+  for (int index = 1; index <= nucsLenght, nucsLenght++)
+  {
+  *tempPknot.small_behind_y_trackerList[index] = -1;  
+  *tempPknot.small_front_y_trackerList[index] = index;
+  
+  //large to small trackers
+  *tempPknot.large_behind_y_trackerList[index] = -1;  
+  *tempPknot.large_front_y_trackerList[index] = index;  
+  
+  //gap and trackers 
+  *tempPknot.gapNucs_trackerList[index] = -1; 
+  *tempPknot.pairsNucs_trackerList[index] = -1;  
+  }
+
+  //utils
+  *tempPknot.nucsLenght = -1;
+  *tempPknot.currentNuc_y = -1;
+  *tempPknot.currentNuc_d = -1;
+  *tempPknot.isPaired_current_y = -1;
+  *tempPknot.is_yGRTd_current = -1;
+  *tempPknot.is_dGRTy_current = -1;
+  
+  *tempPknot.nextNuc_y = -1;
+  *tempPknot.nextNuc_d = -1;
+  *tempPknot.isPaired_next_y = FALSE;
+  *tempPknot.is_yGRTd_next = FALSE;
+  *tempPknot.is_dGRTy_next = FALSE;
+  
+  //loop, bulge, stack, pknot boolean logic variables
+  *tempPknot.inGap = FALSE;
+
+  *tempPknot.isLoop_suspected = FALSE;
+  *tempPknot.isLoop_confident = FALSE;
+  *tempPknot.isLoop_confirmed = FALSE;
+
+  *tempPknot.isBulge_suspected = FALSE;
+  *tempPknot.isBulge_confident = FALSE;
+  *tempPknot.isBulge_confirmed = FALSE; 
+ 
+  *tempPknot.isStack_suspected = FALSE;
+  *tempPknot.isStack_confident = FALSE;
+  *tempPknot.isStack_confirmed = FALSE;
+
+  *tempPknot.isPknot_suspected = FALSE;
+  *tempPknot.isPknot_confident = FALSE;
+  *tempPknot.isPknot_confirmed = FALSE;
+}
 
 
 /* ***************************************************** */
