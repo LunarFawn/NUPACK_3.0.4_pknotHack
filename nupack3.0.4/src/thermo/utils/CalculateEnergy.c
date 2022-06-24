@@ -295,14 +295,14 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   *tempPknot.isPknot_suspected = FALSE;
   *tempPknot.isPknot_confident = FALSE;
   *tempPknot.isPknot_confirmed = FALSE;
-}
+};
 
 void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
 {
   int indexToAdd = segmentLenght-trackerList_Count;
   *trackerList[indexToAdd] = y;
   *trackerList_Count++;  
-}
+};
 
 void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
 {
@@ -315,7 +315,7 @@ void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
       *trackerList_Count--;
     }
   } 
-}
+};
 
 bool NucInTrackerList(int nucIndexNum, int trakerList, int trackerList_Count)
 {
@@ -330,7 +330,7 @@ bool NucInTrackerList(int nucIndexNum, int trakerList, int trackerList_Count)
     }
 
   return inTrackerList;
-}
+};
 
 void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
                            bool *suspectedTracker, bool *confidentTracker, bool *confirmnedTracker)
@@ -338,13 +338,13 @@ void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
   *suspectedTracker =  suspected;
   *confidentTracker = confident;
   *confirmnedTracker = confirmned;
-}
+};
 
 bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, struct PknotDetectionData *pknotData_mainStruct, fold *thefold)
 {
   //This is the logic for walking and testing the nucc pairing in a secondary structure
   //feed it a starting y nuc and it will walk the structure eacah nuc 1 at a time and test if paired
-  
+  //this first bit initializes a bunch of stuff and tehn it checks if curreny y is paired
   bool doSmall = doSmallToLargeNuc;
   int fullSeqLength = -1;
   int segmentLength = -1;
@@ -390,7 +390,6 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
       *pknotData_mainStruct->is_yGRTd_current = FALSE;
       *pknotData_mainStruct->is_dGRTy_current = TRUE;
     }
-
   }
 
   if(pknotData_mainStruct->nextNuc_y == -1)
@@ -419,163 +418,175 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
     //add the last nuc to the list
     //add to the list immediatly when it is hit
     
-    AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_behind_y_trackerList,
-                      pknotData_mainStruct->small_behind_y_trackerList_Count);
+  AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_behind_y_trackerList,
+                    pknotData_mainStruct->small_behind_y_trackerList_Count);
 
-    if (inGap==TRUE)
-    {
-      //indexToAdd = nucsLenght-gapNucs_Count;
-      //gapNucs[indexToAdd]=actualNuc;
-    }
-
-    if (inStack==TRUE)
-    {
-      //placeholder for this?
-    }
-
-    //now remove from the front
-    RemoveNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_front_y_trackerList
-                      pknotData_mainStruct->small_front_y_trackerList_Count);
-    
-    //now we know what should be behind and ahead and what has been found in its gap if applicable
-    //make a test data structure
-    struct PknotDetectionData pknotData_testStruct;
-    InitalizePknotStruct(*thefold, *pknotData_testStruct);
-    *pknotData_testStruct.currentNuc_y=pknotData_mainStruct->currentNuc_y;
-    *pknotData_testStruct.currentNuc_d=pknotData_mainStruct->currentNuc_d;
-    *pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
-    *pknotData_testStruct.thisSegmentLenght=0;
-
-    if (pknotData_mainStruct.isPaired_current_y==TRUE)
-    {
-      //this nuc is paired so record in main structure tracker as well as the primary test tracker
-      AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->pairsNucs_trackerList,
-                      pknotData_mainStruct->pairsNucs_trackerList_Count)
-      
-      AddNuc_TrackerList(pknotData_testStruct->currentNuc_y, pknotData_testStruct->pairsNucs_trackerList,
-                      pknotData_testStruct->pairsNucs_trackerList_Count);
-      
-      //now need to see if next nuc is a gap, stack, or pknot in first part of identifying structure
-
-      //first check if the current nucs pair is in the current list of nucs in front
-      bool isValid_inFront = FALSE;
-      isValid_inFront = NucInTrackerList(pknotData_mainStruct.currentNuc_d, pknotData_mainStruct->small_front_y_trackerList,
-                                        pknotData_mainStruct->small_front_y_trackerList_Count);
-
-      if ( isValid_inFront==TRUE)
-      {
-        //we are progressing through a normal sequence and stacks and it looks normal
-        //if in front is valid then its most likely not a pknot
-        //check next nuc pair
-
-        SetStructureCondidence(TRUE, FALSE, FALSE,
-                              pknotData_mainStruct->isStack_suspected, 
-                              pknotData_mainStruct->isStack_confident, 
-                              pknotData_mainStruct->isStack_confirmed);
-        
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isPknot_suspected, 
-                              pknotData_mainStruct->isPknot_confident, 
-                              pknotData_mainStruct->isPknot_confirmed);
-        
-      }
-      else
-      {
-        //this is potentially in a pknot 
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isStack_suspected, 
-                              pknotData_mainStruct->isStack_confident, 
-                              pknotData_mainStruct->isStack_confirmed);
-        
-        SetStructureCondidence(TRUE, FALSE, FALSE,
-                              pknotData_mainStruct->isPknot_suspected, 
-                              pknotData_mainStruct->isPknot_confident, 
-                              pknotData_mainStruct->isPknot_confirmed);
-      }
-      
-      //now get next nuc info as part of test routine to determine next course of action
-      int nextSearchNuc=searchNuc_index+1;
-      int nextSearchNuc_compPair = thefold->pairs[nextSearchNuc];
-
-      if (isStack_suspected==TRUE)
-      {
-        //most likely in a stack.
-        //this is the fitst nuc inspected and is the current nux
-        //now test the next nuc and if ambiguous then do a oposite direction inspection
-        if (nextSearchNuc_compPair == -1)
-        {
-          //its in a gap so record that
-          inGap=TRUE;
-          indexToAdd = nucsLenght-gapNucs_Count;
-          gapNucs[indexToAdd]=actualNuc;
-          gapNucs_Count++;
-
-          //should be in a loop now so check nucs
-          //fold should be in expected range after last pairing
-
-          //check if nucpair_compPair isin front
-          isValid_inFront = FALSE;
-          for (int index = 1; index <=nucsLenght; index++)
-          {
-            if (nucs_Front_SL[index]==nextSearchNuc_compPair)
-            {
-              //its in the listof expected front nucs so its valid ad should be able to loop to next nuck
-              isValid_inFront = TRUE;
-
-              //this basicaly would be the equivialant of coming upon a pair while walking a gap and then jumping the pair
-              //the next nucs is a gap and is part of expected nucs so its basically in a lcoal loop            
-            }
-          }
-
-          if(isValid_inFront==TRUE)
-          {
-            //this basicaly would be the equivialant of coming upon a pair while walking a gap and then jumping the pair
-            //the next nucs is a gap and is part of expected nucs so its basically in a lcoal loop   
-
-            //the nucpair is valid as a standard pair as its in the front
-            //set test front array to exclude everything before the next nucsearch_compPair
-            for(int index = 1; index <=nextSearchNuc_compPair, index++)
-            {
-              nucs_Front_Test_SL[index]=-1;
-            } 
-
-          }
-          else
-          {
-            //its not in the expected front so it is probably a pknot but need to test
-            isPknot_suspected=TRUE;
-
-            //this basicaly would be the equivialant of coming upon a pair while walking a gap and then jumping the pair
-            //the next nucs is a pknot
-          }
-        }
-        else
-        {
-          //there is a pair net so figure it out
-          //this is the next nuc pair we are looking at
-          //should be in a stack so walk it and make sure it makes sense
-          //basically repeat while loop now
-          inStack=TRUE;
-          indexToAdd = nucsLenght-pairsTracker_Test_Count;
-          pairsTracker_Test[indexToAdd]=nextSearchNuc_compPair;
-          pairsTracker_Test_Count++;
-          
-        }
-
-      }
-      else
-      {
-        //no point in testing next pair but need a good reason why
-      }
-     
-    }
+  if (inGap==TRUE)
+  {
+    //indexToAdd = nucsLenght-gapNucs_Count;
+    //gapNucs[indexToAdd]=actualNuc;
   }
-}
 
-bool TestPair_pknot(int startNuc_y, PknotDetectionData *pknotData_mainStruct, fold *thefold)
+  if (inStack==TRUE)
+  {
+    //placeholder for this?
+  }
+
+  //now remove from the front
+  RemoveNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_front_y_trackerList
+                    pknotData_mainStruct->small_front_y_trackerList_Count);
+  
+  //now we know what should be behind and ahead and what has been found in its gap if applicable
+  //make a test data structure
+  struct PknotDetectionData pknotData_testStruct;
+  InitalizePknotStruct(*thefold, *pknotData_testStruct);
+  *pknotData_testStruct.currentNuc_y=pknotData_mainStruct->currentNuc_y;
+  *pknotData_testStruct.currentNuc_d=pknotData_mainStruct->currentNuc_d;
+  *pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
+  *pknotData_testStruct.thisSegmentLenght=0;
+
+  if (pknotData_mainStruct.isPaired_current_y==TRUE)
+  {
+    //this nuc is paired so record in main structure tracker as well as the primary test tracker
+    AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->pairsNucs_trackerList,
+                    pknotData_mainStruct->pairsNucs_trackerList_Count)
+    
+    AddNuc_TrackerList(pknotData_testStruct->currentNuc_y, pknotData_testStruct->pairsNucs_trackerList,
+                    pknotData_testStruct->pairsNucs_trackerList_Count);
+    
+    //now need to see if next nuc is a gap, stack, or pknot in first part of identifying structure
+
+    //first check if the current nucs pair is in the current list of nucs in front
+    bool isValid_inFront = FALSE;
+    isValid_inFront = NucInTrackerList(pknotData_mainStruct.currentNuc_d, pknotData_mainStruct->small_front_y_trackerList,
+                                      pknotData_mainStruct->small_front_y_trackerList_Count);
+
+    if ( isValid_inFront==TRUE)
+    {
+      //we are progressing through a normal sequence and stacks and it looks normal
+      //if in front is valid then its most likely not a pknot
+      //check next nuc pair
+
+      //this is potentialy a stack
+      SetStructureCondidence(TRUE, FALSE, FALSE,
+                            pknotData_mainStruct->isStack_suspected, 
+                            pknotData_mainStruct->isStack_confident, 
+                            pknotData_mainStruct->isStack_confirmed);
+      
+      SetStructureCondidence(FALSE, FALSE, FALSE,
+                            pknotData_mainStruct->isPknot_suspected, 
+                            pknotData_mainStruct->isPknot_confident, 
+                            pknotData_mainStruct->isPknot_confirmed);
+      
+    }
+    else
+    {
+      //this is potentially in a pknot 
+      SetStructureCondidence(FALSE, FALSE, FALSE,
+                            pknotData_mainStruct->isStack_suspected, 
+                            pknotData_mainStruct->isStack_confident, 
+                            pknotData_mainStruct->isStack_confirmed);
+      
+      SetStructureCondidence(TRUE, FALSE, FALSE,
+                            pknotData_mainStruct->isPknot_suspected, 
+                            pknotData_mainStruct->isPknot_confident, 
+                            pknotData_mainStruct->isPknot_confirmed);
+    }
+    
+    //at this point we have suspicions only about the nucs\
+    //potential structures are LOOP, STACK, PKNOT
+    //potential configs of individual nuc is UNPAIRD, PAIRED, BULGE
+    //if in LOOP each nuc after a stack can be another stack nuc but each jump will always be in the original front list
+    //if in STACK then each y jump will have a d jump that is equivalent
+    //if in PKNOT each jump should give a wild number that may or may not return to orignal front list. that is why need reverse search in this case is suspected
+    
+    //test for stack or pknot if either suspected
+    if (pknotData_mainStruct->isStack_suspected==TRUE)
+    {
+      //test for stack
+    }
+
+    if (pknotData_mainStruct->isPknot_suspected==TRUE)
+    {
+      //test for pknot
+    }
+    
+
+
+
+    //now get next nuc info as part of test routine to determine next course of action
+    int nextSearchNuc=searchNuc_index+1;
+    int nextSearchNuc_compPair = thefold->pairs[nextSearchNuc];
+
+    if (isStack_suspected==TRUE)
+    {
+      
+
+    }
+    else
+    {
+      //no point in testing next pair but need a good reason why
+    }
+    
+  }  
+};
+
+bool TestPair_pknot(int startNuc_y, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
 {
 
 
+}
+
+bool TestPair_Stack( int startNuc_y, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
+{
+  bool isStack=FALSE;
+  
+  //this fucntion tests if teh nuc (y) passed is part of a stack of 2 or more base pairs
+  //such that the first pair is i,j and the second pair is i+1, j-1
+  //startNuc_y is the first nuc in what is suspected to be a stack
+  bool isPaired_first = FALSE;
+  bool isPaired_second = FALSE;
+  
+  int i_first = startNuc_y;
+  int j_first = thefold->pairs[i_first];
+  if (i_first != -1)
+  {
+    isPaired_first=TRUE;
+  }  
+
+  int i_second =  startNuc_y+1;
+  int j_second = thefold->pairs[i_second];
+  if (i_second != -1)
+  {
+    isPaired_second = TRUE
+  }
+
+  //if both nucs are paired then it might be in a stack
+  //if they are not both paired they can not be a stack
+  if( isPaired_first==TRUE && isPaired_second==TRUE)
+  {
+    //might be a stack
+    //make sure all nucs pairs point to the right nucs
+    //then check the math
+    if (thefold->pairs[j_first]==i_first && thefold->pairs[j_second]==i_second)
+    {
+      //both y and y+1 has a pair that matches a reverse query of the j nucs
+      //now test the nuc order
+      if (i_second==i_first+1 && j_second == j_first-1)
+      {
+        //it is a stack yay
+        isStack=TRUE;
+      }
+    }
+  }
+  else
+  {
+    //it cant be a stack
+    //do nothing as initialized to FALSE
+    
+  }
+
+  return isStack;
 }
 
 
