@@ -184,8 +184,11 @@ typedef struct PknotDetectionData
   
   //utils
   int nucsLenght;
+  int fullSequenceLenght;
+  int thisSegmentLenght;
   int currentNuc_y;
   int currentNuc_d;
+  int endNuc_y;
   bool isPaired_current_y;
   bool is_yGRTd_current;
   bool is_dGRTy_current;
@@ -217,16 +220,11 @@ typedef struct PknotDetectionData
 };
 
 
-void InitalizePknotStruct(fold *thefold, PknotDetectionData *tempPknot)
-{
-
-  
-  //new pknot routine
-  
-//main seeking trackers
+void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
+{     
+  //main seeking trackers
   //small to large trackers
 
-  
   *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
   *tempPknot.small_behind_y_trackerList_Count = -1;
   *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
@@ -264,11 +262,14 @@ void InitalizePknotStruct(fold *thefold, PknotDetectionData *tempPknot)
 
   //utils
   *tempPknot.nucsLenght = -1;
+  *tempPknot.fullSequenceLenght = thefold->seqlength;
+  *tempPknot.thisSegmentLenght = -1;
   *tempPknot.currentNuc_y = -1;
   *tempPknot.currentNuc_d = -1;
-  *tempPknot.isPaired_current_y = -1;
-  *tempPknot.is_yGRTd_current = -1;
-  *tempPknot.is_dGRTy_current = -1;
+  *tempPknot.endNuc_y = -1;
+  *tempPknot.isPaired_current_y = FALSE;
+  *tempPknot.is_yGRTd_current = FALSE;
+  *tempPknot.is_dGRTy_current = FALSE;
   
   *tempPknot.nextNuc_y = -1;
   *tempPknot.nextNuc_d = -1;
@@ -296,144 +297,49 @@ void InitalizePknotStruct(fold *thefold, PknotDetectionData *tempPknot)
   *tempPknot.isPknot_confirmed = FALSE;
 }
 
-
-/* ***************************************************** */
-void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs) {
+bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, char struct PknotDetectionData *pknotData_mainStruct, fold *thefold)
+{
+  //This is the logic for walking and testing the nucc pairing in a secondary structure
+  //feed it a starting y nuc and it will walk the structure eacah nuc 1 at a time and test if paired
   
+  bool doSmall = doSmallToLargeNuc;
   
-  int init, i; // loop indices for initializations
-  
-  int pairsFromParens[ MAXSEQLENGTH];
-  
-  
-  thefold->seqlength = seqlength;
-  thefold->seq = seq;
-  
-  pairsFromParens[0] = -5; 
-  if( parens != NULL) 
-    getStructureFromParens( parens, pairsFromParens,  
-                           thefold->seqlength);
-  
-  thefold->pairs = 
-    (int*) calloc( thefold->seqlength+1, sizeof(int));
-  if( thefold->pairs == NULL) {
-    printf("Unable to allocate fold file!\n");
-    exit(1);
-  }
-  
-  thefold->pknots = 
-    (int*) calloc( thefold->seqlength+1, sizeof(int));
-  if( thefold->pknots == NULL) {
-    printf("Unable to allocate fold file!\n");
-    exit(1);
-  }
-  
-  //enumerate the actual pknot tracker
-  thefold->actualPknots = 
-    (int*) calloc( thefold->seqlength+1, sizeof(int));
-  if( thefold->actualPknots == NULL) {
-    printf("Unable to allocate fold file for new pknot stuff!\n");
-    exit(1);
-  }
-
-  for( init = 0; init <= thefold->seqlength; init++) {
-    thefold->pairs[init] = -1;
-    thefold->pknots[init] = -1;
-  }
-  
-
-  //this populates the pairs lisin fold
-  for( init = 0; init <= thefold->seqlength - 1; init++) {
-    if( parens != NULL) 
-      thefold->pairs[init] = pairsFromParens[init];
-    else
-      thefold->pairs[init] = thepairs[init];
-  }
-  
-  
-  //new pknot routine
-
-  bool isPair = FALSE;
-z
-  //initialize to TRUE and first nuc will actually change it
-  bool noPair_NextNuc = FALSE;
-  
-  //nucs are 0 indexed so start nuc is index 0
-  int searchNuc_index = 0;
-
-  //search nuc comlempentary pair index
-  int searchNuc_compPair = -1;
-
-  //range [0] = i-1, [1] = start of this run. This is in 1 based index
-  //SL = Smal to large nuc order, LS = Large to small nuc order
-  //Small to large
-  int nucsLenght= thefold->seqlength;
-  int *nucs_Behind_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Behind_SL_Count =0;
-  int *nucs_Front_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Front_SL_Count =nucsLenght;
-
-  //large to small
-  int *nucs_Behind_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Behind_LS_Count =0;
-  int *nucs_Front_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Front_LS_Count =nucsLenght;
-
-  int *gapNucs = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int gapNucs_Count =0;
-
-  int *pairsTracker = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int pairsTracker_Count =0;
-
-  int indexToAdd = -1;
-
-
-  int nucsLenght= thefold->seqlength;
-  int *nucs_Behind_SL_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Behind_SL_Test_Count =0;
-  int *nucs_Front_Test_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Front_Test_SL_Count =nucsLenght;
-
-  //large to small
-  int *nucs_Behind_Test_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Behind_Test_LS_Count =0;
-  int *nucs_Front_Test_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int nucs_Front_Test_LS_Count =nucsLenght;
-
-  int *gapNucs_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int gapNucs_Test_Count =0;
-
-  int *pairsTracker_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
-  int pairsTracker_Test_Count =0;
-
-  int indexToAdd = -1;
-  //initialize nucs front list
-  for (int index = 1; index <= nucsLenght, nucsLenght++)
+  if (doSmallToLargeNuc == TRUE)
   {
-    nucs_Front_SL[index] = index;
-    
-    nucs_Front_LS[index] = index;
-    nucs_Behind_SL[index] = -1;    
-    nucs_Behind_LS[index] = -1;
-    gapNucs[index] = -1;
-    pairsTracker[index] = -1;
+    *pknotData_mainStruct.thisSegmentLenght = (endNuc_y - startNuc_y);
+  }
+  else
+  {
+    *pknotData_mainStruct.thisSegmentLenght = (startNuc_y - endNuc_y);
   }
 
-  bool inGap = FALSE;
-  bool inStack = FALSE;
-  bool inStack_nextNuc = FALSE;
+  *pknotData_mainStruct.currentNuc_y = startNuc_y;
+  *pknotData_mainStruct.currentNuc_d = thefold->pairs[startNuc_y];
+  
+  *pknotData_mainStruct.nextNuc_y = startNuc_y+1;
+  *pknotData_mainStruct.nextNuc_d = thefold->pairs[startNuc_y];
+  
+  
+  *pknotData_mainStruct.nucsLenght = thefold->seqlength;
 
-  //logic for deciding if stack or pknot
-  bool isStack_suspected = FALSE;
-  bool isStack_confident = FALSE;
-  bool isPknot_suspected = FALSE;
-  bool isPknot_confident = FALSE;
+  if(pknotData_mainStruct.currentNuc_d == -1)
+  {
+    pknotData_mainStruct.isPaired_current_y= FALSE;
+  }
+  else
+  {
+    pknotData_mainStruct.isPaired_current_y= TRUE;
+  }
 
 
-  while (noPair_NextNuc == TRUE)
-  { 
-   
-    //this is the entry for each nuc and stuff happens
+  
+
+
+
+
+  // this is the entry for each nuc and stuff happens
+    
+    
     //now act on searchNuc_index nucleotide
 
     //get the  actual nuc number and th complementary pair
@@ -591,6 +497,152 @@ z
      
     }
   }
+}
+
+bool TestPair_pknot(int startNuc_y, PknotDetectionData *pknotData_mainStruct, fold *thefold)
+{
+
+
+}
+
+
+/* ***************************************************** */
+void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs) {
+  
+  
+  int init, i; // loop indices for initializations
+  
+  int pairsFromParens[ MAXSEQLENGTH];
+  
+  
+  thefold->seqlength = seqlength;
+  thefold->seq = seq;
+  
+  pairsFromParens[0] = -5; 
+  if( parens != NULL) 
+    getStructureFromParens( parens, pairsFromParens,  
+                           thefold->seqlength);
+  
+  thefold->pairs = 
+    (int*) calloc( thefold->seqlength+1, sizeof(int));
+  if( thefold->pairs == NULL) {
+    printf("Unable to allocate fold file!\n");
+    exit(1);
+  }
+  
+  thefold->pknots = 
+    (int*) calloc( thefold->seqlength+1, sizeof(int));
+  if( thefold->pknots == NULL) {
+    printf("Unable to allocate fold file!\n");
+    exit(1);
+  }
+  
+  //enumerate the actual pknot tracker
+  thefold->actualPknots = 
+    (int*) calloc( thefold->seqlength+1, sizeof(int));
+  if( thefold->actualPknots == NULL) {
+    printf("Unable to allocate fold file for new pknot stuff!\n");
+    exit(1);
+  }
+
+  for( init = 0; init <= thefold->seqlength; init++) {
+    thefold->pairs[init] = -1;
+    thefold->pknots[init] = -1;
+  }
+  
+
+  //this populates the pairs lisin fold
+  for( init = 0; init <= thefold->seqlength - 1; init++) {
+    if( parens != NULL) 
+      thefold->pairs[init] = pairsFromParens[init];
+    else
+      thefold->pairs[init] = thepairs[init];
+  }
+  
+  
+  //new pknot routine
+
+  bool isPair = FALSE;
+z
+  //initialize to TRUE and first nuc will actually change it
+  bool noPair_NextNuc = FALSE;
+  
+  //nucs are 0 indexed so start nuc is index 0
+  int searchNuc_index = 0;
+
+  //search nuc comlempentary pair index
+  int searchNuc_compPair = -1;
+
+  //range [0] = i-1, [1] = start of this run. This is in 1 based index
+  //SL = Smal to large nuc order, LS = Large to small nuc order
+  //Small to large
+  int nucsLenght= thefold->seqlength;
+  int *nucs_Behind_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Behind_SL_Count =0;
+  int *nucs_Front_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Front_SL_Count =nucsLenght;
+
+  //large to small
+  int *nucs_Behind_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Behind_LS_Count =0;
+  int *nucs_Front_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Front_LS_Count =nucsLenght;
+
+  int *gapNucs = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int gapNucs_Count =0;
+
+  int *pairsTracker = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int pairsTracker_Count =0;
+
+  int indexToAdd = -1;
+
+
+  int nucsLenght= thefold->seqlength;
+  int *nucs_Behind_SL_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Behind_SL_Test_Count =0;
+  int *nucs_Front_Test_SL = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Front_Test_SL_Count =nucsLenght;
+
+  //large to small
+  int *nucs_Behind_Test_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Behind_Test_LS_Count =0;
+  int *nucs_Front_Test_LS = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int nucs_Front_Test_LS_Count =nucsLenght;
+
+  int *gapNucs_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int gapNucs_Test_Count =0;
+
+  int *pairsTracker_Test = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  int pairsTracker_Test_Count =0;
+
+  int indexToAdd = -1;
+  //initialize nucs front list
+  for (int index = 1; index <= nucsLenght, nucsLenght++)
+  {
+    nucs_Front_SL[index] = index;
+    
+    nucs_Front_LS[index] = index;
+    nucs_Behind_SL[index] = -1;    
+    nucs_Behind_LS[index] = -1;
+    gapNucs[index] = -1;
+    pairsTracker[index] = -1;
+  }
+
+  bool inGap = FALSE;
+  bool inStack = FALSE;
+  bool inStack_nextNuc = FALSE;
+
+  //logic for deciding if stack or pknot
+  bool isStack_suspected = FALSE;
+  bool isStack_confident = FALSE;
+  bool isPknot_suspected = FALSE;
+  bool isPknot_confident = FALSE;
+
+
+  while (noPair_NextNuc == TRUE)
+  { 
+   
+    /
 
   //at this point the while loop
 
