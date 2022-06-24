@@ -461,7 +461,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
     isValid_inFront = NucInTrackerList(pknotData_mainStruct.currentNuc_d, pknotData_mainStruct->small_front_y_trackerList,
                                       pknotData_mainStruct->small_front_y_trackerList_Count);
 
-    if ( isValid_inFront==TRUE)
+    if (isValid_inFront==TRUE)
     {
       //we are progressing through a normal sequence and stacks and it looks normal
       //if in front is valid then its most likely not a pknot
@@ -494,16 +494,17 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
     }
     
     //at this point we have suspicions only about the nucs\
-    //potential structures are LOOP, STACK, PKNOT
-    //potential configs of individual nuc is UNPAIRD, PAIRED, BULGE
+    //potential structures are LOOP, STACK, BULGE, PKNOT
+    //potential configs of individual nuc is UNPAIRD, PAIRED
     //if in LOOP each nuc after a stack can be another stack nuc but each jump will always be in the original front list
     //if in STACK then each y jump will have a d jump that is equivalent
     //if in PKNOT each jump should give a wild number that may or may not return to orignal front list. that is why need reverse search in this case is suspected
     
-    //test for stack or pknot if either suspected
+    //test for LOOP, STACK, BULGE
     if (pknotData_mainStruct->isStack_suspected==TRUE)
     {
-      //test for stack
+      //test for stack as it is suspected to be the pair that paw detected during walk
+      TestAfterPair_Stack(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, pknotData_mainStruct, )
     }
 
     if (pknotData_mainStruct->isPknot_suspected==TRUE)
@@ -543,7 +544,6 @@ bool TestAfterPair_Loop(int start_y, int start_d, struct PknotDetectionData *pkn
   {
     isLoop = TRUE
   }
-
   return isLoop;
 }
 
@@ -562,7 +562,7 @@ bool TestAfterPair_Bulge(int start_y, int start_d, struct PknotDetectionData *pk
   return isBulge;
 }
 
-bool TestAfterPair_Stack(int start_y, int start_d, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
+bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
 {
   bool isStack=FALSE;
   
