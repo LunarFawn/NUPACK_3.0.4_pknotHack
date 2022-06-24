@@ -160,185 +160,7 @@ DBL_TYPE naEnergyPairsOrParensFullWithSym( int *thepairs, char *parens,
 }
 
 
-typedef struct PknotDetectionData
-{ 
-  //main seeking trackers
-  //small to large trackers
-  int* small_behind_y_trackerList;
-  int small_behind_y_trackerList_Count;
-  int* small_front_y_trackerList;
-  int small_front_y_trackerList_Count;
-  
-  //large to small trackers
-  int* large_behind_y_trackerList;
-  int large_behind_y_trackerList_Count;
-  int* large_front_y_trackerList;
-  int large_front_y_trackerList_Count;
-  
-  
-  //gap and trackers 
-  int* gapNucs_trackerList;
-  int gapNucs_trackerList_Count;
-  int* pairsNucs_trackerList;
-  int pairsNucs_trackerList_Count;
-  
-  //utils
-  int nucsLenght;
-  int fullSequenceLenght;
-  int thisSegmentLenght;
-  int currentNuc_y;
-  int currentNuc_d;
-  int endNuc_y;
-  bool isPaired_current_y;
-  bool is_yGRTd_current;
-  bool is_dGRTy_current;
-  
-  int nextNuc_y;
-  int nextNuc_d;
-  bool isPaired_next_y;
-  bool is_yGRTd_next;
-  bool is_dGRTy_next;
-  
-  //loop, bulge, stack, pknot boolean logic variables
-  bool inGap;
 
-  bool isLoop_suspected;
-  bool isLoop_confident;
-  bool isLoop_confirmed;
-
-  bool isBulge_suspected;
-  bool isBulge_confident;
-  bool isBulge_confirmed; 
- 
-  bool isStack_suspected;
-  bool isStack_confident;
-  bool isStack_confirmed;
-
-  bool isPknot_suspected;
-  bool isPknot_confident;
-  bool isPknot_confirmed;
-};
-
-
-void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
-{     
-  //main seeking trackers
-  //small to large trackers
-
-  *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.small_behind_y_trackerList_Count = -1;
-  *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.small_front_y_trackerList_Count = -1;
-  
-  //large to small trackers
-  *tempPknot.large_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.large_behind_y_trackerList_Count = -1;
-  *tempPknot.large_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.large_front_y_trackerList_Count = -1;
-  
-  
-  //gap and trackers 
-  *tempPknot.gapNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.gapNucs_trackerList_Count = -1;
-  *tempPknot.pairsNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.pairsNucs_trackerList_Count = -1;
-
-
- int indexToAdd = -1;
-  //initialize nucs front list
-  for (int index = 0; index < nucsLenght, nucsLenght++)
-  {
-    *tempPknot.small_behind_y_trackerList[index] = -1;  
-    *tempPknot.small_front_y_trackerList[index] = index;
-    
-    //large to small trackers
-    *tempPknot.large_behind_y_trackerList[index] = -1;  
-    *tempPknot.large_front_y_trackerList[index] = index;  
-    
-    //gap and trackers 
-    *tempPknot.gapNucs_trackerList[index] = -1; 
-    *tempPknot.pairsNucs_trackerList[index] = -1;  
-  }
-
-  //utils
-  *tempPknot.nucsLenght = -1;
-  *tempPknot.fullSequenceLenght = thefold->seqlength;
-  *tempPknot.thisSegmentLenght = -1;
-  *tempPknot.currentNuc_y = -1;
-  *tempPknot.currentNuc_d = -1;
-  *tempPknot.endNuc_y = -1;
-  *tempPknot.isPaired_current_y = FALSE;
-  *tempPknot.is_yGRTd_current = FALSE;
-  *tempPknot.is_dGRTy_current = FALSE;
-  
-  *tempPknot.nextNuc_y = -1;
-  *tempPknot.nextNuc_d = -1;
-  *tempPknot.isPaired_next_y = FALSE;
-  *tempPknot.is_yGRTd_next = FALSE;
-  *tempPknot.is_dGRTy_next = FALSE;
-  
-  //loop, bulge, stack, pknot boolean logic variables
-  *tempPknot.inGap = FALSE;
-
-  *tempPknot.isLoop_suspected = FALSE;
-  *tempPknot.isLoop_confident = FALSE;
-  *tempPknot.isLoop_confirmed = FALSE;
-
-  *tempPknot.isBulge_suspected = FALSE;
-  *tempPknot.isBulge_confident = FALSE;
-  *tempPknot.isBulge_confirmed = FALSE; 
- 
-  *tempPknot.isStack_suspected = FALSE;
-  *tempPknot.isStack_confident = FALSE;
-  *tempPknot.isStack_confirmed = FALSE;
-
-  *tempPknot.isPknot_suspected = FALSE;
-  *tempPknot.isPknot_confident = FALSE;
-  *tempPknot.isPknot_confirmed = FALSE;
-};
-
-void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
-{
-  int indexToAdd = segmentLenght-trackerList_Count;
-  *trackerList[indexToAdd] = y;
-  *trackerList_Count++;  
-};
-
-void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
-{
-  //now remove from the front
-  for (int index = 0; index < trackerList_Count, index++)
-  {
-    if (trackerList[index] == y)
-    {
-      *trackerList[index] = -1;
-      *trackerList_Count--;
-    }
-  } 
-};
-
-bool NucInTrackerList(int nucIndexNum, int trakerList, int trackerList_Count)
-{
- bool inTrackerList = FALSE;
-    for (int index = 0; index < trackerList_Count; index++)
-    {
-      if (trakerList[index]==nucIndexNum)
-      {
-        //its in the listof expected front nucs so its valid ad should be able to loop to next nuck
-        inTrackerList = TRUE;     
-      }
-    }
-
-  return inTrackerList;
-};
-
-void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
-                           bool *suspectedTracker, bool *confidentTracker, bool *confirmnedTracker)
-{
-  *suspectedTracker =  suspected;
-  *confidentTracker = confident;
-  *confirmnedTracker = confirmned;
-};
 
 bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, struct PknotDetectionData *pknotData_mainStruct, fold *thefold)
 {
@@ -550,7 +372,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
       
       if (isBulge==TRUE)
       {
-        SetStructureCondidence(TRUE, TRUE, TRUE,
+        SetStructureCondidence(TRUE, TRUE, FALSE,
                               pknotData_mainStruct->isBulge_suspected, 
                               pknotData_mainStruct->isBulge_confident, 
                               pknotData_mainStruct->isBulge_confirmed);
@@ -612,7 +434,7 @@ bool TestAfterPair_Loop(int start_y, int start_d, fold *thefold)
     isLoop = TRUE
   }
   return isLoop;
-}
+};
 
 bool TestAfterPair_Bulge(int start_y, int start_d, fold *thefold)
 {
@@ -627,7 +449,7 @@ bool TestAfterPair_Bulge(int start_y, int start_d, fold *thefold)
     isBulge = TRUE
   }
   return isBulge;
-}
+};
 
 bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
 {
@@ -678,8 +500,215 @@ bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
     
   }
   return isStack;
+};
+
+bool TestAfterPait_IsValidFront(int start_y, int start_d, struct PknotDetectionData *structPknotData, struct PknotDetectionData *structTestPknotData, fold *thefold)
+{
+
 }
 
+typedef struct PknotDetectionData
+{ 
+  //main seeking trackers
+  //small to large trackers
+  int* small_behind_y_trackerList;
+  int small_behind_y_trackerList_Count;
+  int* small_front_y_trackerList;
+  int small_front_y_trackerList_Count;
+  
+  //large to small trackers
+  int* large_behind_y_trackerList;
+  int large_behind_y_trackerList_Count;
+  int* large_front_y_trackerList;
+  int large_front_y_trackerList_Count;
+  
+  
+  //gap and trackers 
+  int* gapNucs_trackerList;
+  int gapNucs_trackerList_Count;
+  int* pairsNucs_trackerList;
+  int pairsNucs_trackerList_Count;
+  
+  //utils
+  int nucsLenght;
+  int fullSequenceLenght;
+  int thisSegmentLenght;
+  int currentNuc_y;
+  bool isValidFront_currentNuc_y;
+  int currentNuc_d;
+  bool isValidFront_currentNuc_d;
+  int endNuc_y;
+  bool isPaired_current_y;
+  bool is_yGRTd_current;
+  bool is_dGRTy_current;
+  
+  int nextNuc_y;
+  bool isValidFront_nextNuc_y;
+  int nextNuc_d;
+  bool isValidFront_nextNuc_d;
+  bool isPaired_next_y;
+  bool is_yGRTd_next;
+  bool is_dGRTy_next;
+  
+  //loop, bulge, stack, pknot boolean logic variables
+  bool inGap;
+
+  bool isLoop_suspected;
+  bool isLoop_confident;
+  bool isLoop_confirmed;
+
+  bool isBulge_suspected;
+  bool isBulge_confident;
+  bool isBulge_confirmed; 
+ 
+  bool isStack_suspected;
+  bool isStack_confident;
+  bool isStack_confirmed;
+
+  bool isPknot_suspected;
+  bool isPknot_confident;
+  bool isPknot_confirmed;
+};
+
+void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
+{     
+  //main seeking trackers
+  //small to large trackers
+
+  *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  *tempPknot.small_behind_y_trackerList_Count = -1;
+  *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  *tempPknot.small_front_y_trackerList_Count = -1;
+  
+  //large to small trackers
+  *tempPknot.large_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  *tempPknot.large_behind_y_trackerList_Count = -1;
+  *tempPknot.large_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  *tempPknot.large_front_y_trackerList_Count = -1;
+  
+  
+  //gap and trackers 
+  *tempPknot.gapNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  *tempPknot.gapNucs_trackerList_Count = -1;
+  *tempPknot.pairsNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  *tempPknot.pairsNucs_trackerList_Count = -1;
+
+
+ int indexToAdd = -1;
+  //initialize nucs front list
+  for (int index = 0; index < nucsLenght, nucsLenght++)
+  {
+    *tempPknot.small_behind_y_trackerList[index] = -1;  
+    *tempPknot.small_front_y_trackerList[index] = index;
+    
+    //large to small trackers
+    *tempPknot.large_behind_y_trackerList[index] = -1;  
+    *tempPknot.large_front_y_trackerList[index] = index;  
+    
+    //gap and trackers 
+    *tempPknot.gapNucs_trackerList[index] = -1; 
+    *tempPknot.pairsNucs_trackerList[index] = -1;  
+  }
+
+  //utils
+  *tempPknot.nucsLenght = -1;
+  *tempPknot.fullSequenceLenght = thefold->seqlength;
+  *tempPknot.thisSegmentLenght = -1;
+  *tempPknot.currentNuc_y = -1;
+  *tempPknot.currentNuc_d = -1;
+  *tempPknot.endNuc_y = -1;
+  *tempPknot.isPaired_current_y = FALSE;
+  *tempPknot.is_yGRTd_current = FALSE;
+  *tempPknot.is_dGRTy_current = FALSE;
+  
+  *tempPknot.nextNuc_y = -1;
+  *tempPknot.nextNuc_d = -1;
+  *tempPknot.isPaired_next_y = FALSE;
+  *tempPknot.is_yGRTd_next = FALSE;
+  *tempPknot.is_dGRTy_next = FALSE;
+  
+  //loop, bulge, stack, pknot boolean logic variables
+  *tempPknot.inGap = FALSE;
+
+  *tempPknot.isLoop_suspected = FALSE;
+  *tempPknot.isLoop_confident = FALSE;
+  *tempPknot.isLoop_confirmed = FALSE;
+
+  *tempPknot.isBulge_suspected = FALSE;
+  *tempPknot.isBulge_confident = FALSE;
+  *tempPknot.isBulge_confirmed = FALSE; 
+ 
+  *tempPknot.isStack_suspected = FALSE;
+  *tempPknot.isStack_confident = FALSE;
+  *tempPknot.isStack_confirmed = FALSE;
+
+  *tempPknot.isPknot_suspected = FALSE;
+  *tempPknot.isPknot_confident = FALSE;
+  *tempPknot.isPknot_confirmed = FALSE;
+  *tempPknot.isValidFront_nextNuc_y = FALSE;
+  *tempPknot->isValidFront_nextNuc_d=FALSE;
+  *tempPknot->isValidFront_currentNuc_y=FALSE;
+  *tempPknot->isValidFront_currentNuc_d=FALSE;
+};
+
+void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
+{
+  int indexToAdd = segmentLenght-trackerList_Count;
+  *trackerList[indexToAdd] = y;
+  *trackerList_Count++;  
+};
+
+void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
+{
+  //now remove from the front
+  for (int index = 0; index < trackerList_Count, index++)
+  {
+    if (trackerList[index] == y)
+    {
+      *trackerList[index] = -1;
+      *trackerList_Count--;
+    }
+  } 
+};
+
+bool NucInTrackerList(int nucIndexNum, int trakerList, int trackerList_Count)
+{
+ bool inTrackerList = FALSE;
+    for (int index = 0; index < trackerList_Count; index++)
+    {
+      if (trakerList[index]==nucIndexNum)
+      {
+        //its in the listof expected front nucs so its valid ad should be able to loop to next nuck
+        inTrackerList = TRUE;     
+      }
+    }
+
+  return inTrackerList;
+};
+
+void ResetTracker_Back(int *trackerList, int *trackerList_Count)
+{
+  for (int index =0;index < trackerList_Count;index++)
+  {
+    *trackerList[index]=-1;
+  }
+};
+
+void ResetTracker_Front(int *trackerList, int *trackerList_Count)
+{
+  for (int index =0;index < trackerList_Count;index++)
+  {
+    *trackerList[index]=index+1;
+  }
+};
+
+void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
+                           bool *suspectedTracker, bool *confidentTracker, bool *confirmnedTracker)
+{
+  *suspectedTracker =  suspected;
+  *confidentTracker = confident;
+  *confirmnedTracker = confirmned;
+}; 
 
 /* ***************************************************** */
 void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs) {
