@@ -594,19 +594,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
 
 
 
-    //now get next nuc info as part of test routine to determine next course of action
-    int nextSearchNuc=searchNuc_index+1;
-    int nextSearchNuc_compPair = thefold->pairs[nextSearchNuc];
-
-    if (isStack_suspected==TRUE)
-    {
-      
-
-    }
-    else
-    {
-      //no point in testing next pair but need a good reason why
-    }
+    
     
   }  
 };
