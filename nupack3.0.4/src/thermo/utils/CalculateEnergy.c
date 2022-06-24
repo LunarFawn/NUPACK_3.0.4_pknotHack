@@ -531,13 +531,25 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
   }  
 };
 
-bool TestPair_pknot(int startNuc_y, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
+bool TestAfterPair_Loop(int start_y, int start_d, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
 {
-
+  //is LOOP if both i_first+1 and j_first-1 are not paired it is a GAP and that is all I car about as a gap means it is a new strcuture domain
+  bool isLoop = FALSE;
+  
+  //we know that start_y i spaired so assume that
 
 }
 
-bool TestPair_Stack( int startNuc_y, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
+bool TestAfterPair_Bulge(int start_y, int start_d, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
+{
+  //is BULGE if i_second IS paired but j_second IS NOT or i_second IS NOT paired but j_second IS  
+  bool isBulge = FALSE;
+
+  //we know that start_y i spaired so assume that
+
+}
+
+bool TestAfterPair_Stack(int start_y, int start_d, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
 {
   bool isStack=FALSE;
   
@@ -547,14 +559,14 @@ bool TestPair_Stack( int startNuc_y, struct PknotDetectionData *pknotData_mainSt
   bool isPaired_first = FALSE;
   bool isPaired_second = FALSE;
   
-  int i_first = startNuc_y;
-  int j_first = thefold->pairs[i_first];
+  int i_first = start_y;
+  int j_first = start_d;
   if (i_first != -1)
   {
     isPaired_first=TRUE;
   }  
 
-  int i_second =  startNuc_y+1;
+  int i_second =  i_first+1;
   int j_second = thefold->pairs[i_second];
   if (i_second != -1)
   {
@@ -585,7 +597,6 @@ bool TestPair_Stack( int startNuc_y, struct PknotDetectionData *pknotData_mainSt
     //do nothing as initialized to FALSE
     
   }
-
   return isStack;
 }
 
