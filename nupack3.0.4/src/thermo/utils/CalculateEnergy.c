@@ -472,6 +472,16 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                             pknotData_mainStruct->isStack_suspected, 
                             pknotData_mainStruct->isStack_confident, 
                             pknotData_mainStruct->isStack_confirmed);
+
+      SetStructureCondidence(TRUE, FALSE, FALSE,
+                            pknotData_mainStruct->isBulge_suspected, 
+                            pknotData_mainStruct->isBulge_confident, 
+                            pknotData_mainStruct->isBulge_confirmed);
+      
+      SetStructureCondidence(TRUE, FALSE, FALSE,
+                            pknotData_mainStruct->isLoop_suspected, 
+                            pknotData_mainStruct->isLoop_confident, 
+                            pknotData_mainStruct->isLoop_confirmed);
       
       SetStructureCondidence(FALSE, FALSE, FALSE,
                             pknotData_mainStruct->isPknot_suspected, 
@@ -487,6 +497,16 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                             pknotData_mainStruct->isStack_confident, 
                             pknotData_mainStruct->isStack_confirmed);
       
+      SetStructureCondidence(FALSE, FALSE, FALSE,
+                            pknotData_mainStruct->isBulge_suspected, 
+                            pknotData_mainStruct->isBulge_confident, 
+                            pknotData_mainStruct->isBulge_confirmed);
+      
+      SetStructureCondidence(FALSE, FALSE, FALSE,
+                            pknotData_mainStruct->isLoop_suspected, 
+                            pknotData_mainStruct->isLoop_confident, 
+                            pknotData_mainStruct->isLoop_confirmed);
+      
       SetStructureCondidence(TRUE, FALSE, FALSE,
                             pknotData_mainStruct->isPknot_suspected, 
                             pknotData_mainStruct->isPknot_confident, 
@@ -501,11 +521,70 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
     //if in PKNOT each jump should give a wild number that may or may not return to orignal front list. that is why need reverse search in this case is suspected
     
     //test for LOOP, STACK, BULGE
+    bool structureFound=FALSE;
     if (pknotData_mainStruct->isStack_suspected==TRUE)
     {
       //test for stack as it is suspected to be the pair that paw detected during walk
-      TestAfterPair_Stack(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, pknotData_mainStruct, )
+      bool isStack = TestAfterPair_Stack(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+      
+      if (isStack==TRUE)
+      {
+        SetStructureCondidence(TRUE, TRUE, FALSE,
+                              pknotData_mainStruct->isStack_suspected, 
+                              pknotData_mainStruct->isStack_confident, 
+                              pknotData_mainStruct->isStack_confirmed);
+      }
+      else
+      {
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isStack_suspected, 
+                              pknotData_mainStruct->isStack_confident, 
+                              pknotData_mainStruct->isStack_confirmed);
+      }
     }
+
+    if (pknotData_mainStruct->isBulge_suspected==TRUE)
+    {
+      //test for stack as it is suspected to be the pair that paw detected during walk
+      bool isBulge = TestAfterPair_Bulge(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+      
+      if (isBulge==TRUE)
+      {
+        SetStructureCondidence(TRUE, TRUE, TRUE,
+                              pknotData_mainStruct->isBulge_suspected, 
+                              pknotData_mainStruct->isBulge_confident, 
+                              pknotData_mainStruct->isBulge_confirmed);
+      }
+      else
+      {
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isBulge_suspected, 
+                              pknotData_mainStruct->isBulge_confident, 
+                              pknotData_mainStruct->isBulge_confirmed);
+      }
+    }
+
+    if (pknotData_mainStruct->isLoop_suspected==TRUE)
+    {
+      //test for stack as it is suspected to be the pair that paw detected during walk
+      bool isLoop = TestAfterPair_Loop(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+      
+      if (isLoop==TRUE)
+      {
+        SetStructureCondidence(TRUE, TRUE, FALSE,
+                              pknotData_mainStruct->isLoop_suspected, 
+                              pknotData_mainStruct->isLoop_confident, 
+                              pknotData_mainStruct->isLoop_confirmed);
+      }
+      else
+      {
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isLoop_suspected, 
+                              pknotData_mainStruct->isLoop_confident, 
+                              pknotData_mainStruct->isLoop_confirmed);
+      }
+    }
+    
 
     if (pknotData_mainStruct->isPknot_suspected==TRUE)
     {
@@ -532,7 +611,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
   }  
 };
 
-bool TestAfterPair_Loop(int start_y, int start_d, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
+bool TestAfterPair_Loop(int start_y, int start_d, fold *thefold)
 {
   //is LOOP if both i_first+1 and j_first-1 are not paired it is a GAPand any number of loops and that is all I care about as a gap means it is a new strcuture domain
   bool isLoop = FALSE;
@@ -547,7 +626,7 @@ bool TestAfterPair_Loop(int start_y, int start_d, struct PknotDetectionData *pkn
   return isLoop;
 }
 
-bool TestAfterPair_Bulge(int start_y, int start_d, struct PknotDetectionData *pknotData_mainStruct, struct PknotDetectionData *pknotData_testStruct, fold *thefold)
+bool TestAfterPair_Bulge(int start_y, int start_d, fold *thefold)
 {
   //is BULGE if i_second IS paired but j_second IS NOT or i_second IS NOT paired but j_second IS  
   bool isBulge = FALSE;
