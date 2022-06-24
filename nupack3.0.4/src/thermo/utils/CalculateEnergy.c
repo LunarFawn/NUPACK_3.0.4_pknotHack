@@ -225,22 +225,22 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   //main seeking trackers
   //small to large trackers
 
-  *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
   *tempPknot.small_behind_y_trackerList_Count = -1;
-  *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
   *tempPknot.small_front_y_trackerList_Count = -1;
   
   //large to small trackers
-  *tempPknot.large_behind_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.large_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
   *tempPknot.large_behind_y_trackerList_Count = -1;
-  *tempPknot.large_front_y_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.large_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
   *tempPknot.large_front_y_trackerList_Count = -1;
   
   
   //gap and trackers 
-  *tempPknot.gapNucs_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.gapNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
   *tempPknot.gapNucs_trackerList_Count = -1;
-  *tempPknot.pairsNucs_trackerList = (int*) calloc( thefold->seqlength+1, sizeof(int));
+  *tempPknot.pairsNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
   *tempPknot.pairsNucs_trackerList_Count = -1;
 
 
@@ -248,16 +248,16 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   //initialize nucs front list
   for (int index = 1; index <= nucsLenght, nucsLenght++)
   {
-  *tempPknot.small_behind_y_trackerList[index] = -1;  
-  *tempPknot.small_front_y_trackerList[index] = index;
-  
-  //large to small trackers
-  *tempPknot.large_behind_y_trackerList[index] = -1;  
-  *tempPknot.large_front_y_trackerList[index] = index;  
-  
-  //gap and trackers 
-  *tempPknot.gapNucs_trackerList[index] = -1; 
-  *tempPknot.pairsNucs_trackerList[index] = -1;  
+    *tempPknot.small_behind_y_trackerList[index] = -1;  
+    *tempPknot.small_front_y_trackerList[index] = index;
+    
+    //large to small trackers
+    *tempPknot.large_behind_y_trackerList[index] = -1;  
+    *tempPknot.large_front_y_trackerList[index] = index;  
+    
+    //gap and trackers 
+    *tempPknot.gapNucs_trackerList[index] = -1; 
+    *tempPknot.pairsNucs_trackerList[index] = -1;  
   }
 
   //utils
@@ -297,22 +297,49 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   *tempPknot.isPknot_confirmed = FALSE;
 }
 
+void LogNucTrackerList(int y, int *trackerList, int *trackerList_Count)
+{
+  int indexToAdd = segmentLenght-trackerList_Count;
+  *trackerList[indexToAdd] = y;
+  *trackerList_Count++;  
+}
+
+void RemoveNucTrackerList(int y, int *trackerList, int *trackerList_Count)
+{
+  int actualNuc = y+1;
+  //now remove from the front
+  for (int index = 1; index <= nucsLenght, nucsLenght++)
+  {
+    if (trackerList[index] == actualNuc)
+    {
+      *trackerList[index] = -1;
+      *trackerList_Count--;
+    }
+  } 
+}
+
+
 bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, char struct PknotDetectionData *pknotData_mainStruct, fold *thefold)
 {
   //This is the logic for walking and testing the nucc pairing in a secondary structure
   //feed it a starting y nuc and it will walk the structure eacah nuc 1 at a time and test if paired
   
   bool doSmall = doSmallToLargeNuc;
-  
+  int fullSeqLength = -1;
+  int segmentLength = -1;
   if (doSmallToLargeNuc == TRUE)
   {
     *pknotData_mainStruct.thisSegmentLenght = (endNuc_y - startNuc_y);
+    
   }
   else
   {
     *pknotData_mainStruct.thisSegmentLenght = (startNuc_y - endNuc_y);
   }
 
+  segmentLength = pknotData_mainStruct.thisSegmentLenght;
+
+  *tempPknot.endNuc_y = endNuc_y;
   *pknotData_mainStruct.currentNuc_y = startNuc_y;
   *pknotData_mainStruct.currentNuc_d = thefold->pairs[startNuc_y];
   
@@ -321,37 +348,59 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
   
   
   *pknotData_mainStruct.nucsLenght = thefold->seqlength;
+  fullSeqLength = pknotData_mainStruct.nucsLenght;
 
-  if(pknotData_mainStruct.currentNuc_d == -1)
+
+  if(pknotData_mainStruct.currentNuc_y == -1)
   {
-    pknotData_mainStruct.isPaired_current_y= FALSE;
+    *pknotData_mainStruct.isPaired_current_y= FALSE;
   }
   else
   {
-    pknotData_mainStruct.isPaired_current_y= TRUE;
+    *pknotData_mainStruct.isPaired_current_y= TRUE;
+    if (currentNuc_y > currentNuc_d)
+    {
+      *pknotData_mainStruct.is_yGRTd_current = TRUE;
+      *pknotData_mainStruct.is_dGRTy_current = FALSE;
+      
+    }
+    else
+    {
+      *pknotData_mainStruct.is_yGRTd_current = FALSE;
+      *pknotData_mainStruct.is_dGRTy_current = TRUE;
+    }
+
   }
 
+  if(pknotData_mainStruct.nextNuc_y == -1)
+  {
+    pknotData_mainStruct.isPaired_next_y= FALSE;
+  }
+  else
+  {
+    pknotData_mainStruct.isPaired_next_y= TRUE;
+     
 
+    if (currentNuc_y > currentNuc_d)
+    {
+      *pknotData_mainStruct.is_yGRTd_next = TRUE;
+      *pknotData_mainStruct.is_dGRTy_next = FALSE;
+    }
+    else
+    {
+      *pknotData_mainStruct.is_yGRTd_next = FALSE;
+      *pknotData_mainStruct.is_dGRTy_next = TRUE;
+    }
+  }
   
-
-
-
-
-  // this is the entry for each nuc and stuff happens
-    
-    
-    //now act on searchNuc_index nucleotide
-
-    //get the  actual nuc number and th complementary pair
-    int actualNuc = searchNuc_index+1;
-    searchNuc_compPair = thefold->pairs[searchNuc_index];
-    int actualNuc_compPair = searchNuc_compPair+1;
+  int indexToAdd = -1;
+  // everything is initialized in the structure for the walk
 
     //add the last nuc to the list
     //add to the list immediatly when it is hit
-    indexToAdd = nucsLenght-nucs_Behind_SL_Count;
-    nucs_Behind_LS[indexToAdd]=actualNuc;
-    nucs_Behind_SL_Count++;
+    
+    LogNucTrackerList(pknotData_mainStruct.currentNuc_y, pknotData_mainStruct.small_behind_y_trackerList,
+                      pknotData_mainStruct.small_behind_y_trackerList_Count);
 
     if (inGap==TRUE)
     {
