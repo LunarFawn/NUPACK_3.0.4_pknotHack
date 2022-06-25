@@ -421,7 +421,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
   }  
 };
 
-bool TestAfterPair_Loop(int start_y, int start_d, fold *thefold)
+bool TestAfterPair_LoopOrGap(int start_y, int start_d, fold *thefold)
 {
   //is LOOP if both i_first+1 and j_first-1 are not paired it is a GAPand any number of loops and that is all I care about as a gap means it is a new strcuture domain
   bool isLoop = FALSE;
@@ -508,8 +508,6 @@ bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
   return isStack;
 };
 
-
-
 typedef struct PknotDetectionData
 { 
   //main seeking trackers
@@ -579,27 +577,27 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   //small to large trackers
 
   *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.small_behind_y_trackerList_Count = -1;
+  *tempPknot.small_behind_y_trackerList_Count = 0;
   *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.small_front_y_trackerList_Count = -1;
+  *tempPknot.small_front_y_trackerList_Count = nucsLenght;
   
   //large to small trackers
   *tempPknot.large_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.large_behind_y_trackerList_Count = -1;
+  *tempPknot.large_behind_y_trackerList_Count = 0;
   *tempPknot.large_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.large_front_y_trackerList_Count = -1;
+  *tempPknot.large_front_y_trackerList_Count = nucsLenght;
   
   
   //gap and trackers 
   *tempPknot.gapNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.gapNucs_trackerList_Count = -1;
+  *tempPknot.gapNucs_trackerList_Count = 0;
   *tempPknot.pairsNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.pairsNucs_trackerList_Count = -1;
+  *tempPknot.pairsNucs_trackerList_Count = 0;
 
 
  int indexToAdd = -1;
   //initialize nucs front list
-  for (int index = 0; index < nucsLenght, nucsLenght++)
+  for (int index = 0; index < nucsLenght, index++)
   {
     *tempPknot.small_behind_y_trackerList[index] = -1;  
     *tempPknot.small_front_y_trackerList[index] = index;
@@ -689,20 +687,22 @@ bool NucInTrackerList(int nucIndexNum, int trakerList, int trackerList_Count)
   return inTrackerList;
 };
 
-void ResetTracker_Back(int *trackerList, int *trackerList_Count)
+void ResetTracker_Back(int *trackerList, int *trackerList_Count,  int sequenceLength)
 {
-  for (int index =0;index < trackerList_Count;index++)
+  for (int index =0; index < sequenceLength; index++)
   {
     *trackerList[index]=-1;
   }
+  *trackerList_Count = 0; 
 };
 
-void ResetTracker_Front(int *trackerList, int *trackerList_Count)
+void ResetTracker_Front(int *trackerList, int *trackerList_Count, int sequenceLength)
 {
-  for (int index =0;index < trackerList_Count;index++)
+  for (int index =0;index < sequenceLength;index++)
   {
     *trackerList[index]=index+1;
   }
+  *trackerList_Count = sequenceLength;
 };
 
 void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
@@ -713,6 +713,17 @@ void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
   *confirmnedTracker = confirmned;
 }; 
 
+
+void LogFrontBackTrackers(int current_y, struct PknotDetectionData *testStructDatad)
+{
+  //first go through and log front tracekrs
+  //start nuc is the begining of the struct or the last nuc tested
+  //current  nuc is the nuc that you are currently at now
+ 
+  RemoveNuc_TrackerList(current_y, testStructData->large_front_y_trackerList, testStructData->large_front_y_trackerList_Count); 
+
+  AddNuc_TrackerList(current_y, testStructData->large_front_y_trackerList, testStructData->large_front_y_trackerList_Count);  
+}
 
 bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionData *mainStructData, struct PknotDetectionData *testStructData, fold *thefold)
 {
@@ -735,7 +746,51 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
   if (isValid_start_d==TRUE)
   {
     //no make sure that it is not a pknot that bind s just before a stack so it does look like it is valid in front but there is a stack later that makes it not valid
+    //idea
+    //do a pknot test jump. the front should now be 21 and above now for exampleif y was 10. so you say ok what if I go to the next nuc in the number if its a gap and the num is
+    //not in the the test front (instead nowin the back) but in the main seq fron then you know you just hit a pknot. now also if you hit a good stack then you may just be in a pknot so you go until you hit a gap. 
+    //if you were in a pknot as before you would now be in a unique front state
+    //if you were not in a pknot then the first gap you hit teh nuc should match the test back tracker and not be in teh front or in main sequence front but should be I think in the main seq back now as well
+    *testStructData = mainStructData;
+
     
+    //now walk and test
+    //first initialize walker logic pairs
+    //we know start_y and d are pairs
+    //walker_y is the nuc after the jump
+    //now work with the test structure data
+    *testStructData->currentNuc_y = start_d;
+    *testStructData->currentNuc_d = thefold->pairs[start_d];
+
+    //loop until find a gap
+    int walker_y = start_d;
+    int walker_d = thefold->pairs[walker_y]1;
+
+    bool inGapNow = FALSE;
+
+    //setup trackers
+    ResetTracker_Front(testStructData->small_front_y_trackerList,
+                       testStructData->large_front_y_trackerList_Count, testStructData->fullSequenceLenght);
+
+    ResetTracker_Back(testStructData->small_behind_y_trackerList,
+                       testStructData->small_behind_y_trackerList_Count, testStructData->fullSequenceLenght)
+    
+    //npw set front and back trackers to current Y poisiton after the jump
+    int index_y = 0;
+    int index_d = 0;
+    for (int index_y = 0; index_y <= start_y; index_y++)
+    {
+      LogFrontBackTrackers(index_y, testStructData);
+    }
+
+    //now that all the nucs for front and back are logged upto teh start_y before teh jump we now log the jumped nuck
+    LogFrontBackTrackers(start_d, testStructData);
+
+    //now record front and back
+    while (inGapNow==FALSE)
+    {
+      
+    }
   }
   else
   {
@@ -743,7 +798,9 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
     isPknot = TRUE;
     return isPknot;
   }
-}
+};
+
+
 /* ***************************************************** */
 void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs) {
   
@@ -855,7 +912,7 @@ z
 
   int indexToAdd = -1;
   //initialize nucs front list
-  for (int index = 1; index <= nucsLenght, nucsLenght++)
+  for (int index = 1; index <= nucsLenght; nucsLenght++)
   {
     nucs_Front_SL[index] = index;
     
