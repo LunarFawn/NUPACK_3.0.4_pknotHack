@@ -747,10 +747,12 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
   {
     //no make sure that it is not a pknot that bind s just before a stack so it does look like it is valid in front but there is a stack later that makes it not valid
     //idea
-    //do a pknot test jump. the front should now be 21 and above now for exampleif y was 10. so you say ok what if I go to the next nuc in the number if its a gap and the num is
-    //not in the the test front (instead nowin the back) but in the main seq fron then you know you just hit a pknot. now also if you hit a good stack then you may just be in a pknot so you go until you hit a gap. 
-    //if you were in a pknot as before you would now be in a unique front state
-    //if you were not in a pknot then the first gap you hit teh nuc should match the test back tracker and not be in teh front or in main sequence front but should be I think in the main seq back now as well
+    //do a pknot test jump. the front should now be 21 and above now for exampleif y was 10. so you say ok what if I go to the next 
+    //nuc in the number if its a gap and the num is not in the the test front (instead nowin the back) but in the main seq front 
+    //then you know you just hit a pknot. now also if you hit a good stack then you may just be in a pknot so you go until you hit a gap. 
+    //if you were in a pknot as before you would now be in a unique front state. f you were not in a pknot then the first
+    //gap you hit teh nuc should match the test back tracker and not be in teh front or in main sequence front but 
+    //should be I think in the main seq back now as well
     *testStructData = mainStructData;
 
     
@@ -764,7 +766,7 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
 
     //loop until find a gap
     int walker_y = start_d;
-    int walker_d = thefold->pairs[walker_y]1;
+    int walker_d = thefold->pairs[walker_y];
 
     bool inGapNow = FALSE;
 
@@ -786,12 +788,32 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
     //now that all the nucs for front and back are logged upto teh start_y before teh jump we now log the jumped nuck
     LogFrontBackTrackers(start_d, testStructData);
 
+    bool inFrontTracker=FALSE;
     //now record front and back
     while (inGapNow==FALSE)
     {
       walker_y++;
-      //test if walker nucs are paired and it makes sense
-      
+      walker_d = thefold->pairs[walker_y];
+      //test if walker nucs are paired and figure out if walker_d is in the front
+      if(walker_d != -1)
+      {
+        inFrontTracker = NucInTrackerList(walker_d, testStructData->large_front_y_trackerList,
+                                          testStructData->large_front_y_trackerList_Count);
+
+        if (inFrontTracker==TRUE)
+        {
+          //this was a good gap and keep going
+        }
+        else
+        {
+          //this is not in the front tracker so it might 
+        }
+      }
+      else
+      {
+        inGapNow=TRUE;
+      }
+
     }
   }
   else
