@@ -773,7 +773,7 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
                        testStructData->large_front_y_trackerList_Count, testStructData->fullSequenceLenght);
 
     ResetTracker_Back(testStructData->small_behind_y_trackerList,
-                       testStructData->small_behind_y_trackerList_Count, testStructData->fullSequenceLenght)
+                       testStructData->small_behind_y_trackerList_Count, testStructData->fullSequenceLenght);
     
     //npw set front and back trackers to current Y poisiton after the jump
     int index_y = 0;
@@ -789,6 +789,8 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
     //now record front and back
     while (inGapNow==FALSE)
     {
+      walker_y++;
+      //test if walker nucs are paired and it makes sense
       
     }
   }
