@@ -502,9 +502,15 @@ bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
   return isStack;
 };
 
-bool TestAfterPait_IsValidFront(int start_y, int start_d, struct PknotDetectionData *structPknotData, struct PknotDetectionData *structTestPknotData, fold *thefold)
+bool TestAfterPair_IsValidFront(int start_y, int start_d, struct PknotDetectionData *mainStructData, struct PknotDetectionData *testStructPknotData, fold *thefold)
 {
+  //the concept here is that a pknot basically can be thought of as a wormhole for RNA. Each loop is region in space and a pknot linkes those loops together
+  //if the pair is in a loop then it just forms stacks but the pairs transect loops for lack of a better word
+  //thus if you have traversed into a pknot you should not have any information about where you are and you fron and back estimates will be off when you poke around
+  //and compare a few different itterations. You go past each hit for a stack each iteration as well as going in the opposite direction at the same time. You shoud eventually
+  //be able to say it is a pknot quickly or you end up building the whole strucutre and you can then make a very good educated decision.
 
+  
 }
 
 typedef struct PknotDetectionData
