@@ -436,7 +436,7 @@ bool TestAfterPair_Loop(int start_y, int start_d, fold *thefold)
   return isLoop;
 };
 
-bool TestAfterPair_Bulge(int start_y, int start_d, fold *thefold)
+bool TestAfterPair_Bulge(int start_y, int start_d, int *unpairedNucStart, fold *thefold)
 {
   //is BULGE if i_second IS paired but j_second IS NOT or i_second IS NOT paired but j_second IS  
   bool isBulge = FALSE;
@@ -444,12 +444,18 @@ bool TestAfterPair_Bulge(int start_y, int start_d, fold *thefold)
   //we know that start_y i spaired so assume that
   int i_second = start_y+1;
   int j_second = start_d-1;
-  if ((i_second != -1 && j_second == -1) || (i_second == -1 && j_second != -1))
+  if (i_second != -1 && j_second == -1)
   {
+    unpairedNucStart=j_second;
+    isBulge = TRUE
+  }
+  else if (i_second == -1 && j_second != -1)
+  {
+    unpairedNucStart=i_second;
     isBulge = TRUE
   }
   return isBulge;
-};
+}; 
 
 bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
 {
@@ -502,16 +508,7 @@ bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
   return isStack;
 };
 
-bool TestAfterPair_IsValidFront(int start_y, int start_d, struct PknotDetectionData *mainStructData, struct PknotDetectionData *testStructPknotData, fold *thefold)
-{
-  //the concept here is that a pknot basically can be thought of as a wormhole for RNA. Each loop is region in space and a pknot linkes those loops together
-  //if the pair is in a loop then it just forms stacks but the pairs transect loops for lack of a better word
-  //thus if you have traversed into a pknot you should not have any information about where you are and you fron and back estimates will be off when you poke around
-  //and compare a few different itterations. You go past each hit for a stack each iteration as well as going in the opposite direction at the same time. You shoud eventually
-  //be able to say it is a pknot quickly or you end up building the whole strucutre and you can then make a very good educated decision.
 
-  
-}
 
 typedef struct PknotDetectionData
 { 
@@ -716,6 +713,37 @@ void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
   *confirmnedTracker = confirmned;
 }; 
 
+
+bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionData *mainStructData, struct PknotDetectionData *testStructData, fold *thefold)
+{
+  //the concept here is that a pknot basically can be thought of as a wormhole for RNA. Each loop is region in space and a pknot linkes those loops together
+  //if the pair is in a loop then it just forms stacks but the pairs transect loops for lack of a better word
+  //thus if you have traversed into a pknot you should not have any information about where you are and you fron and back estimates will be off when you poke around
+  //and compare a few different itterations. You go past each hit for a stack each iteration as well as going in the opposite direction at the same time. You shoud eventually
+  //be able to say it is a pknot quickly or you end up building the whole strucutre and you can then make a very good educated decision.
+
+  //pair has been found so now first test the complentary nuc for the nuc under test and this is start_d
+  //test if in the forward tracker
+
+  //when find a pair travers it and record. now test walker continues on and ignores any pairs that make sense based on the pair found. if I finds a pair that does not match then it knows
+  //there is pknot between one of them.
+
+  bool isPknot = FALSE;
+
+  bool isValid_start_d = NucInTrackerList(start_d, mainStructData->small_front_y_trackerList, mainStructData->large_front_y_trackerList_Count);
+
+  if (isValid_start_d==TRUE)
+  {
+    //no make sure that it is not a pknot that bind s just before a stack so it does look like it is valid in front but there is a stack later that makes it not valid
+    
+  }
+  else
+  {
+    //if its not valid then it be default means teh fiold is nopt in the normal folding prgression of a zipper and the fold in question is bending backward which is kinda teh definition of pknot
+    isPknot = TRUE;
+    return isPknot;
+  }
+}
 /* ***************************************************** */
 void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs) {
   
