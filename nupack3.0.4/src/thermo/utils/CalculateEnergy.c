@@ -267,6 +267,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
   *pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
   *pknotData_testStruct.thisSegmentLenght=0;
 
+  bool foundStructureType=FALSE;
   if (pknotData_mainStruct.isPaired_current_y==TRUE)
   {
     //this nuc is paired so record in main structure tracker as well as the primary test tracker
@@ -355,6 +356,17 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                               pknotData_mainStruct->isStack_suspected, 
                               pknotData_mainStruct->isStack_confident, 
                               pknotData_mainStruct->isStack_confirmed);
+
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isBulge_suspected, 
+                              pknotData_mainStruct->isBulge_confident, 
+                              pknotData_mainStruct->isBulge_confirmed);
+        
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isLoop_suspected, 
+                              pknotData_mainStruct->isLoop_confident, 
+                              pknotData_mainStruct->isLoop_confirmed);
+        foundStructureType = TRUE;
       }
       else
       {
@@ -376,6 +388,17 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                               pknotData_mainStruct->isBulge_suspected, 
                               pknotData_mainStruct->isBulge_confident, 
                               pknotData_mainStruct->isBulge_confirmed);
+
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isStack_suspected, 
+                              pknotData_mainStruct->isStack_confident, 
+                              pknotData_mainStruct->isStack_confirmed);
+
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isLoop_suspected, 
+                              pknotData_mainStruct->isLoop_confident, 
+                              pknotData_mainStruct->isLoop_confirmed);
+        foundStructureType = TRUE;
       }
       else
       {
@@ -397,6 +420,15 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                               pknotData_mainStruct->isLoop_suspected, 
                               pknotData_mainStruct->isLoop_confident, 
                               pknotData_mainStruct->isLoop_confirmed);
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isBulge_suspected, 
+                              pknotData_mainStruct->isBulge_confident, 
+                              pknotData_mainStruct->isBulge_confirmed);
+        SetStructureCondidence(FALSE, FALSE, FALSE,
+                              pknotData_mainStruct->isStack_suspected, 
+                              pknotData_mainStruct->isStack_confident, 
+                              pknotData_mainStruct->isStack_confirmed);
+        foundStructureType = TRUE;
       }
       else
       {
@@ -407,17 +439,14 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
       }
     }
     
-
-    if (pknotData_mainStruct->isPknot_suspected==TRUE)
+    bool isPknot_finalAnswer = FALSE;
+    if (pknotData_mainStruct->isPknot_suspected==TRUE || foundStructureType == FALSE;)
     {
-      //test for pknot
+      //test for pknot      
+      isPknot_finalAnswer = TestAfterPairFound_IsPknot(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, pknotData_mainStruct, thefold );
     }
-    
 
-
-
-    
-    
+    return isPknot_finalAnswer;
   }  
 };
 
@@ -672,7 +701,7 @@ void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
   } 
 };
 
-bool NucInTrackerList(int nucIndexNum, int trakerList, int trackerList_Count)
+bool NucInTrackerList(int nucIndexNum, int *trakerList, int trackerList_Count)
 {
  bool inTrackerList = FALSE;
     for (int index = 0; index < trackerList_Count; index++)
@@ -712,7 +741,6 @@ void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
   *confidentTracker = confident;
   *confirmnedTracker = confirmned;
 }; 
-
 
 void LogFrontBackTrackers(int current_y, struct PknotDetectionData *testStructDatad)
 {
@@ -777,9 +805,10 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
 
     //new thought 6-25-22
     //make single walk of walker_y and record now step start_y one step and stop untul wlaker_d is hit or a pair is found.
-    // the pair is jumped and the section from start_y to start_d is removed from a test tracker for the main seq front tracker.
-    //walker_y is now investigated. 
-    //if it is between start y and start d then it is a pknot
+    // the pair is jumped and the section betwwen but not including y to d of this search is removed from a test tracker for the main seq front tracker.
+    //walker_y is now investigated.
+    //if hit walker_y then the pair should  just be a normal pair 
+    //if walker_y is between start y and start d then it is a pknot
     //if start_y pair as it is incremented adn tested is paired and the d for it is less than walker_d then it is a pkont
     //loop until find a gap
     
@@ -797,11 +826,15 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
     bool isPair = FALSE;
     bool isWalker_y_oneStep=FALSE;
 
+    
     while (stopWalkingMainStruct==FALSE)
     {
       //advance the main struct nuc 1 step at a time until a pair is hit or walker_y_onstep is
       mainStruct_y++;
       mainStruct_d = thefold->pairs[mainStruct_y];
+    
+      //
+    
       //is this a pair or onestep walker y
     
 
@@ -827,24 +860,43 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
     }
 
     //now we know what all the nuc numbers are of those in play and we need to do logic on them
+    bool inTracker = FALSE;
+    
+    if (isWalker_y_oneStep==TRUE)
+    {
+      //it went all the way around and came to the walker form teh main struct so it is expected and is not pknot
+      isPknot=FALSE;
+    }
+    else
+    {
+      if (isPair==TRUE)
+      {
+        int index_y=-1;
+        for (index_y=mainStruct_y+1; index_y < mainStruct_d; index_y++)
+        {
+          //remove all the nucs betwwen start_y and start_d from front tracker for main struct 
+          RemoveNuc_TrackerList(index_y, mainPknotStructData->small_front_y_trackerList, mainPknotStructData->small_front_y_trackerList_Count);
+        }
 
-    
-    
-    
-
+        inTracker = NucInTrackerList(walker_y_oneStep, mainPknotStructData->small_front_y_trackerList,
+                                      mainPknotStructData->small_front_y_trackerList_Count);
+        if (inTracker==FALSE)
+        {
+          //its not in the tracker so it is not expected and thus it is a pknot
+          isPknot=TRUE;
+        }
+      }
+    }
   }
   else
   {
-    //if its not valid then it be default means teh fiold is nopt in the normal folding prgression of a zipper and the fold in question is bending backward which is kinda teh definition of pknot
+    //if its not valid then it be default means teh fold is not in the normal folding prgression of a zipper and the fold in question is bending backward which is kinda teh definition of pknot
     isPknot = TRUE;
-    return isPknot;
   }
+
+  return isPknot;
 };
-
-
-        //dont care about front tracker right now here
-        //inFrontTracker = NucInTrackerList(walker_d, testStructData->large_front_y_trackerList,
-        //                                  testStructData->large_front_y_trackerList_Count);    
+   
 
 /* ***************************************************** */
 void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs) {
