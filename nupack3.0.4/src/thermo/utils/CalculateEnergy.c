@@ -164,6 +164,7 @@ DBL_TYPE naEnergyPairsOrParensFullWithSym( int *thepairs, char *parens,
 
 bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, struct PknotDetectionData *pknotData_mainStruct, fold *thefold)
 {
+  bool isPknot_finalAnswer = FALSE;
   //This is the logic for walking and testing the nucc pairing in a secondary structure
   //feed it a starting y nuc and it will walk the structure eacah nuc 1 at a time and test if paired
   //this first bit initializes a bunch of stuff and tehn it checks if curreny y is paired
@@ -439,15 +440,16 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
       }
     }
     
-    bool isPknot_finalAnswer = FALSE;
+    
     if (pknotData_mainStruct->isPknot_suspected==TRUE || foundStructureType == FALSE;)
     {
       //test for pknot      
       isPknot_finalAnswer = TestAfterPairFound_IsPknot(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, pknotData_mainStruct, thefold );
     }
 
-    return isPknot_finalAnswer;
-  }  
+    
+  } 
+  return isPknot_finalAnswer; 
 };
 
 bool TestAfterPair_LoopOrGap(int start_y, int start_d, fold *thefold)
