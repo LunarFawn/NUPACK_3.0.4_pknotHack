@@ -725,7 +725,7 @@ void LogFrontBackTrackers(int current_y, struct PknotDetectionData *testStructDa
   AddNuc_TrackerList(current_y, testStructData->large_front_y_trackerList, testStructData->large_front_y_trackerList_Count);  
 }
 
-bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionData *mainStructData, struct PknotDetectionData *testStructData, fold *thefold)
+bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionData *mainStructData, fold *thefold)
 {
   //the concept here is that a pknot basically can be thought of as a wormhole for RNA. Each loop is region in space and a pknot linkes those loops together
   //if the pair is in a loop then it just forms stacks but the pairs transect loops for lack of a better word
@@ -758,78 +758,79 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
     //walk until gap is hi and record. now begin walkig the main struct to look for the infamous stack that is the source of all our troubles
     //if a stack is there and it influences the trackers wrong then it is a pknot. basically need to walk the main struct now disregarding all pairs but
     //doing the jumps to understand the loop and whatnot. stop either when the frist stack is hit or the logic has looped back on teh original start_y that was passed at time of call
-
-    *testStructData = mainStructData;
-
     
     //now walk and test
     //first initialize walker logic pairs
     //we know start_y and d are pairs
     //walker_y is the nuc after the jump
     //now work with the test structure data
+
+    struct PknotDetectionData *mainPknotStructData
+    struct PknotDetectionData *testPknotStructData
+
+    *mainPknotStructData = mainStructData;
+    *testPknotStructData = mainStructData;
+
     *testStructData->currentNuc_y = start_d;
     *testStructData->currentNuc_d = thefold->pairs[start_d];
-
-    //loop until find a gap
-    int walker_y = start_d;
-    int walker_d = thefold->pairs[walker_y];
-
-    bool inGapNow = FALSE;
-
-    //setup trackers
-    //ResetTracker_Front(testStructData->small_front_y_trackerList,
-    //                   testStructData->large_front_y_trackerList_Count, testStructData->fullSequenceLenght);
-
-    //ResetTracker_Back(testStructData->small_behind_y_trackerList,
-    //                   testStructData->small_behind_y_trackerList_Count, testStructData->fullSequenceLenght);
     
-    ////npw set front and back trackers to current Y poisiton after the jump
-    //int index_y = 0;
-    //int index_d = 0;
-    //for (int index_y = 0; index_y <= start_y; index_y++)
-    //{
-    //  LogFrontBackTrackers(index_y, testStructData);
-    //}
 
-    //now that all the nucs for front and back are logged upto teh start_y before teh jump we now log the jumped nuck
-    //LogFrontBackTrackers(start_d, testStructData);
-
-    bool inFrontTracker=FALSE;
-   
-    //in a gap now so need to test the trackers
-    //from above:
-    
     //new thought 6-25-22
     //make single walk of walker_y and record now step start_y one step and stop untul wlaker_d is hit or a pair is found.
     // the pair is jumped and the section from start_y to start_d is removed from a test tracker for the main seq front tracker.
     //walker_y is now investigated. 
     //if it is between start y and start d then it is a pknot
     //if start_y pair as it is incremented adn tested is paired and the d for it is less than walker_d then it is a pkont
-    walker_y++;
-    walker_d = thefold->pairs[walker_y];
+    //loop until find a gap
     
-    
+    int walker_y_entrance = start_d;
+    int walker_d_entrance = thefold->pairs[walker_y_entrance];
 
+    int walker_y_oneStep = walker_y_entrance+1;
+    int walker_d_oneStep = thefold->pairs[walker_y_oneStep];
 
-    //now step through nucs to test for pknot after teh previous initialization steps
-    //save or maybe toss out this code chuck
-    while (inGapNow==FALSE)
+    //now walk nucs from start_y
+    int mainStruct_y=start_y;
+    int mainStruct_d=start_d;
+    bool stopWalkingMainStruct = FALSE;
+
+    bool isPair = FALSE;
+    bool isWalker_y_oneStep=FALSE;
+
+    while (stopWalkingMainStruct==FALSE)
     {
-      walker_y++;
-      walker_d = thefold->pairs[walker_y];
-      
-      //test if walker nucs are paired and figure out if walker_d is in the front
-      if(walker_d != -1)
+      //advance the main struct nuc 1 step at a time until a pair is hit or walker_y_onstep is
+      mainStruct_y++;
+      mainStruct_d = thefold->pairs[mainStruct_y];
+      //is this a pair or onestep walker y
+    
+
+      //if have his the onesetp walker than you have gone all the way around and the main struct is in the same loop as the test nuc
+      //this means that it is not a pknot
+      if(mainStruct_y == walker_y_oneStep)
       {
-        //if nuc is paired then keep going until hit a gap so do nothing and let teh loop continue  
-        
+        isWalker_y_oneStep=TRUE;   
+        stopWalkingMainStruct=TRUE;     
       }
       else
       {
-        inGapNow=TRUE;
-        LogFrontBackTrackers(walker_y, testStructData);
+        if(mainStruct_y != -1)
+        {
+          isPair=TRUE;
+          stopWalkingMainStruct=TRUE;  
+        }
+        else
+        {
+          //if its not a pair then keep going
+        }
       }
     }
+
+    //now we know what all the nuc numbers are of those in play and we need to do logic on them
+
+    
+    
+    
 
   }
   else
