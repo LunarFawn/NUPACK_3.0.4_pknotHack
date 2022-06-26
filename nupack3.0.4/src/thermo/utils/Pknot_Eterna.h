@@ -1,3 +1,11 @@
+
+#ifndef PKNOT_ETERNA_H
+#define PKNOT_ETERNA_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "pfuncUtilsConstants.h"
 #include "runtime_constants.h"
 #include "physical_constants.h"
@@ -88,3 +96,9 @@ void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
                            bool *suspectedTracker, bool *confidentTracker, bool *confirmnedTracker);
 void LogFrontBackTrackers(int current_y, struct PknotDetectionData *testStructDatad);
 bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionData *mainStructData, fold *thefold);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

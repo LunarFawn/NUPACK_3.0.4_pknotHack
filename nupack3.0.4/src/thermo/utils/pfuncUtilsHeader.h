@@ -241,7 +241,7 @@ DBL_TYPE naEnergyPairsOrParens( int *thepairs, char *parens,
                                 int inputSeq[]);
 
 //Makefold() creates a structure of type fold from parens or thepairs.
-void MakeFold( fold *thefold, int seqlength, int seq[], char *parens, int *thepairs);
+void MakeFold(bool useNewPknot, fold *thefold, int seqlength, int seq[], char *parens, int *thepairs);
 /* ******************************************************************************** */
 /*                    END FUNCTIONS FROM CALCULATEENERGY.C                          */
 /* ******************************************************************************** */

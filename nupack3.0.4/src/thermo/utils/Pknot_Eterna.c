@@ -368,6 +368,8 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
 
     
   } 
+
+  //need to change this to now walk the whole structre and log pknots then pass whether one was found or not
   return isPknot_finalAnswer; 
 };
 
