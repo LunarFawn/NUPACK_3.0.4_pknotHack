@@ -18,69 +18,6 @@
 #include "DNAExternals.h"
 
 
-typedef struct PknotDetectionData
-{ 
-  //main seeking trackers
-  //small to large trackers
-  int* small_behind_y_trackerList;
-  int small_behind_y_trackerList_Count;
-  int* small_front_y_trackerList;
-  int small_front_y_trackerList_Count;
-  
-  //large to small trackers
-  int* large_behind_y_trackerList;
-  int large_behind_y_trackerList_Count;
-  int* large_front_y_trackerList;
-  int large_front_y_trackerList_Count;
-  
-  
-  //gap and trackers 
-  int* gapNucs_trackerList;
-  int gapNucs_trackerList_Count;
-  int* pairsNucs_trackerList;
-  int pairsNucs_trackerList_Count;
-  
-  //utils
-  int nucsLenght;
-  int fullSequenceLenght;
-  int thisSegmentLenght;
-  int currentNuc_y;
-  bool isValidFront_currentNuc_y;
-  int currentNuc_d;
-  bool isValidFront_currentNuc_d;
-  int endNuc_y;
-  bool isPaired_current_y;
-  bool is_yGRTd_current;
-  bool is_dGRTy_current;
-  
-  int nextNuc_y;
-  bool isValidFront_nextNuc_y;
-  int nextNuc_d;
-  bool isValidFront_nextNuc_d;
-  bool isPaired_next_y;
-  bool is_yGRTd_next;
-  bool is_dGRTy_next;
-  
-  //loop, bulge, stack, pknot boolean logic variables
-  bool inGap;
-
-  bool isLoop_suspected;
-  bool isLoop_confident;
-  bool isLoop_confirmed;
-
-  bool isBulge_suspected;
-  bool isBulge_confident;
-  bool isBulge_confirmed; 
- 
-  bool isStack_suspected;
-  bool isStack_confident;
-  bool isStack_confirmed;
-
-  bool isPknot_suspected;
-  bool isPknot_confident;
-  bool isPknot_confirmed;
-};
-
 bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, struct PknotDetectionData *pknotData_mainStruct, fold *thefold)
 {
   bool isPknot_finalAnswer = FALSE;
@@ -93,46 +30,47 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
   int segmentLength = -1;
   if (doSmallToLargeNuc == TRUE)
   {
-    *pknotData_mainStruct->thisSegmentLenght = (endNuc_y - startNuc_y);
+    
+    pknotData_mainStruct->thisSegmentLenght = (endNuc_y - startNuc_y);
     
   }
   else
   {
-    *pknotData_mainStruct->thisSegmentLenght = (startNuc_y - endNuc_y);
+    pknotData_mainStruct->thisSegmentLenght = (startNuc_y - endNuc_y);
   }
 
   segmentLength = pknotData_mainStruct->thisSegmentLenght;
 
-  *pknotData_mainStruct->endNuc_y = endNuc_y;
-  *pknotData_mainStruct->currentNuc_y = startNuc_y;
-  *pknotData_mainStruct->currentNuc_d = thefold->pairs[startNuc_y];
+  pknotData_mainStruct->endNuc_y = endNuc_y;
+  pknotData_mainStruct->currentNuc_y = startNuc_y;
+  pknotData_mainStruct->currentNuc_d = thefold->pairs[startNuc_y];
   
-  *pknotData_mainStruct->nextNuc_y = startNuc_y+1;
-  *pknotData_mainStruct->nextNuc_d = thefold->pairs[startNuc_y];
+  pknotData_mainStruct->nextNuc_y = startNuc_y+1;
+  pknotData_mainStruct->nextNuc_d = thefold->pairs[startNuc_y];
   
   
-  *pknotData_mainStruct->nucsLenght = thefold->seqlength;
+  pknotData_mainStruct->nucsLenght = thefold->seqlength;
     fullSeqLength = pknotData_mainStruct->nucsLenght;
 
     while (pknotData_mainStruct->currentNuc_y<=pknotData_mainStruct->endNuc_y)
     {
         if(pknotData_mainStruct->currentNuc_y == -1)
         {
-            *pknotData_mainStruct->isPaired_current_y= FALSE;
+            pknotData_mainStruct->isPaired_current_y= FALSE;
         }
         else
         {
-            *pknotData_mainStruct->isPaired_current_y= TRUE;
-            if (currentNuc_y > currentNuc_d)
+            pknotData_mainStruct->isPaired_current_y= TRUE;
+            if (pknotData_mainStruct->currentNuc_y > pknotData_mainStruct->currentNuc_d)
             {
-            *pknotData_mainStruct->is_yGRTd_current = TRUE;
-            *pknotData_mainStruct->is_dGRTy_current = FALSE;
+            pknotData_mainStruct->is_yGRTd_current = TRUE;
+            pknotData_mainStruct->is_dGRTy_current = FALSE;
             
             }
             else
             {
-            *pknotData_mainStruct->is_yGRTd_current = FALSE;
-            *pknotData_mainStruct->is_dGRTy_current = TRUE;
+            pknotData_mainStruct->is_yGRTd_current = FALSE;
+            pknotData_mainStruct->is_dGRTy_current = TRUE;
             }
         }
 
@@ -145,15 +83,15 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
             pknotData_mainStruct->isPaired_next_y= TRUE;
             
 
-            if (currentNuc_y > currentNuc_d)
+            if (pknotData_mainStruct->currentNuc_y > pknotData_mainStruct->currentNuc_d)
             {
-            *pknotData_mainStruct->is_yGRTd_next = TRUE;
-            *pknotData_mainStruct->is_dGRTy_next = FALSE;
+            pknotData_mainStruct->is_yGRTd_next = TRUE;
+            pknotData_mainStruct->is_dGRTy_next = FALSE;
             }
             else
             {
-            *pknotData_mainStruct->is_yGRTd_next = FALSE;
-            *pknotData_mainStruct->is_dGRTy_next = TRUE;
+            pknotData_mainStruct->is_yGRTd_next = FALSE;
+            pknotData_mainStruct->is_dGRTy_next = TRUE;
             }
         }
         
@@ -184,10 +122,10 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
         //make a test data structure
         struct PknotDetectionData pknotData_testStruct;
         InitalizePknotStruct(*thefold, *pknotData_testStruct);
-        *pknotData_testStruct.currentNuc_y=pknotData_mainStruct->currentNuc_y;
-        *pknotData_testStruct.currentNuc_d=pknotData_mainStruct->currentNuc_d;
-        *pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
-        *pknotData_testStruct.thisSegmentLenght=0;
+        pknotData_testStruct.currentNuc_y=pknotData_mainStruct->currentNuc_y;
+        pknotData_testStruct.currentNuc_d=pknotData_mainStruct->currentNuc_d;
+        pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
+        pknotData_testStruct.thisSegmentLenght=0;
 
         bool foundStructureType=FALSE;
         if (pknotData_mainStruct.isPaired_current_y==TRUE)
@@ -370,7 +308,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                 if (isPknot_finalAnswer==TRUE)
                 {
                     PknotFoundInSequence=TRUE;
-                    *thefold->actualPknots[pknotData_mainStruct->currentNuc_y]=pknotData_mainStruct->currentNuc_d; 
+                    thefold->actualPknots[pknotData_mainStruct->currentNuc_y]=pknotData_mainStruct->currentNuc_d; 
                 }
             }                
         } 
@@ -380,7 +318,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
         }
 
         //now go to next y in sequnce for next nuc inspection
-        *pknotData_mainStruct->currentNuc_y++;
+        pknotData_mainStruct->currentNuc_y++;
     }  
   //need to change this to now walk the whole structre and log pknots then pass whether one was found or not
   return PknotFoundInSequence; 

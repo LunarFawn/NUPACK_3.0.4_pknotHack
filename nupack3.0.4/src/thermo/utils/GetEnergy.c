@@ -6,7 +6,7 @@
    and includes the function for determining energies.  03/15/2001  
    
 */
-#include <stdbool.h>
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
@@ -45,7 +45,7 @@ DBL_TYPE EnergyF( int start, int stop, fold *thefold) {
     }
     
     if( thefold->pknots[ j] != -1) {
-      d = thefold->pknots[ j];      
+      d = thefold->pknots[ j];
       
       energy +=
         EnergyPk( d, j, thefold) + BETA_1 +
@@ -53,7 +53,6 @@ DBL_TYPE EnergyF( int start, int stop, fold *thefold) {
       
       j = d-1;
       stop = j;
-      
     }
     else if( thefold->pairs[ j] != -1) {
       d = thefold->pairs[ j];
@@ -92,90 +91,8 @@ DBL_TYPE EnergyF( int start, int stop, fold *thefold) {
 
 /* *************************************** */
 
-bool CheckSpecialCase_Pknot(const int start, const int stop, const int current_j, const int current_d, int *next_y, int *next_d, fold *thefold) {
-  //test if pair feeds into another loop and if so then go on next nuc in order after teh stack ends.
-  //treat these stacks as unpaired for now
-  //also make sure you do no go in a circle
-
-
-  *next_y = current_j;
-  *next_d = current_d;
-
-  bool stopChecking=FALSE;
-  //we know that this is not the start nuc as it would have already stopped at the while loop at the start
-  //so check if there is another nuc pair and if so then walk until you find the end and resume the rest of the logic
-  //even if you can consider a pknot bewteen two independant internal loops a multiploop. the multiloop energy is only
-  //determined by the base pairs at each branch and does not care about the stack energies.
-
-  //make sure not to go past start so if the check shows teh next nuc is start nuc then bail and exit the pairs function and 
-  //let the main while loop finish
-  bool pastFirstPair=FALSE;
-  
-  while (stopChecking == FALSE)
-  {
-    //change to teh next nuc pair to check it alawys going bacwards as all operations are made from rigthmost pair
-    *next_y--;
-    *next_d = thefold->pairs[next_y];
-
-    //create a  set of y and d vriabel taht can be manipulated without worry
-    
-
-
-    //first check if next nuc is the stop nuc and if it is then well its done
-    //if not then keep going with logic
-    if (next_y <= start)
-    {
-      //you are at the end of this main loop so exit and pass the next nucs as j and d
-      
-      j=nextPair_nuc1;
-      stop=j;
-      break;
-    }
-    else
-    {
-      bool isNucPair=FALSE;
-      //walk like Fb until hit a pair. Traverse pair and check if next nuc after pair continues on to teh stop nuc.
-      //if it does then teh stack in question connects to a bunch of loops that are none of the pknots concern
-      if(CanPair(thefold->seq[next_y],thefold->seq[next_d])) {
-        isNucPair = TRUE;
-      }
-      //folow the nucs until you either come to start or you hit a gap
-      //this step is recursive so need to call a recursive algorithm
-
-
-      if (isNucPair == TRUE)
-      {
-        //there is a pair here so jump across the nuc pair to teh nuc right after the pair and keep checking
-        *next_y=next_d-1;
-        *next_d=thefold->pairs[next_y];
-
-        bool isGap = FALSE;    
-        //now check if there is a gap right after and if is greater than stop
-        if(!CanPair(thefold->seq[next_y],thefold->seq[next_d])) {
-        isGap = TRUE;
-        }
-        
-
-
-      }
-      else
-      {
-       
-        
-      }
-    }
-  }
-}
-
-
-//this is a hack of EnergyFb that will ignore a stack between a large interior loop and will just compute the energies as if
-//the two loops were a big main loop like figure 15
 DBL_TYPE EnergyFb( int start, int stop, fold *thefold) {
   
-  
-
-  bool use_SpecialCase_DoubleInteriorLoop = TRUE;
-
   DBL_TYPE energy = 0.0;
   int d=-1; //Left end of rightmost pair or pk
   
@@ -235,7 +152,7 @@ DBL_TYPE EnergyFb( int start, int stop, fold *thefold) {
     }
     else if( thefold->pairs[ j] != -1) {
       d = thefold->pairs[ j];
-  
+      
       pairs[2*nPairs] =  d;
       pairs[2*nPairs + 1] = j;
       if(!CanPair(thefold->seq[d],thefold->seq[j])) {
@@ -244,13 +161,16 @@ DBL_TYPE EnergyFb( int start, int stop, fold *thefold) {
         return NAD_INFINITY;
       }
       nPairs++;
-      if( d > j) {       
+      
+      if( d > j) {
         printf("Error: Unclassified pknot!\n");
-        exit(1);        
+        exit(1);
       }
-  
+      
       j = d-1;
       stop = j;
+      
+      
     }
     else {
       j--;

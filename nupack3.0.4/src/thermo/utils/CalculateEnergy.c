@@ -14,7 +14,6 @@
 
 #include "pfuncUtilsHeader.h" //contains functions and structures
 #include "DNAExternals.h"
-#include "Pknot_Eterna.h" //contains the functions and structures logic for new pknot detection for eterna
 //***********************************************************
 
 DBL_TYPE naEnergy( char *prefix, int seq[]) {
@@ -138,7 +137,9 @@ DBL_TYPE naEnergyPairsOrParensFullWithSym( int *thepairs, char *parens,
   MAGNESIUM_CONC = magnesiumconc;
   USE_LONG_HELIX_FOR_SALT_CORRECTION = uselongsalt;
   
-  MakeFold( &thefold, seqlength, seq, parens, thepairs);
+  bool useNewPknot=TRUE;
+
+  MakeFold(useNewPknot, &thefold, seqlength, seq, parens, thepairs);
   thefold.seq = seq;
   
   thefold.isNicked = (int *) calloc( seqlength, sizeof( int));
@@ -217,7 +218,7 @@ void MakeFold(bool useNewPknot, fold *thefold, int seqlength, int seq[], char *p
   struct PknotDetectionData *makeFoldPknotData;
   if (useNewPknot==TRUE)
   {
-    
+    InitalizePknotStruct(thefold,makeFoldPknotData);
     bool foundPknot = WalkAndTest_Structure(0,thefold->seqlength-1, TRUE, makeFoldPknotData, thefold);
 
     //need code here to pull pknot data out or need to pass completed structure to walk and test

@@ -16,7 +16,7 @@ CFLAGS = $(NUPACK_CFLAGS) ${NUPACK_SELECTION_FLAGS} $(INCLUDES)
 
 LIBRARY_OBJECT = backtrack.o CalculateEnergy.o ene.o GetEnergy.o \
  init.o mfeUtils.o min.o nsStar.o pairsPr.o pf.o pfuncUtils.o \
- pknots.o sumexp.o sumexp_pk.o ReadCommandLineNPK.o DNAGlobals.o \
+ pknots.o sumexp.o sumexp_pk.o ReadCommandLineNPK.o DNAGlobals.o Pknot_Eterna.o\
  $(SHARED_DIR)/utils.o
 
 
