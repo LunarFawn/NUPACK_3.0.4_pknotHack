@@ -84,6 +84,7 @@ typedef struct PknotDetectionData
 bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, struct PknotDetectionData *pknotData_mainStruct, fold *thefold)
 {
   bool isPknot_finalAnswer = FALSE;
+  bool PknotFoundInSequence= FALSE;
   //This is the logic for walking and testing the nucc pairing in a secondary structure
   //feed it a starting y nuc and it will walk the structure eacah nuc 1 at a time and test if paired
   //this first bit initializes a bunch of stuff and tehn it checks if curreny y is paired
@@ -102,7 +103,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
 
   segmentLength = pknotData_mainStruct->thisSegmentLenght;
 
-  *tempPknot->endNuc_y = endNuc_y;
+  *pknotData_mainStruct->endNuc_y = endNuc_y;
   *pknotData_mainStruct->currentNuc_y = startNuc_y;
   *pknotData_mainStruct->currentNuc_d = thefold->pairs[startNuc_y];
   
@@ -111,266 +112,282 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
   
   
   *pknotData_mainStruct->nucsLenght = thefold->seqlength;
-  fullSeqLength = pknotData_mainStruct->nucsLenght;
+    fullSeqLength = pknotData_mainStruct->nucsLenght;
 
-
-  if(pknotData_mainStruct->currentNuc_y == -1)
-  {
-    *pknotData_mainStruct->isPaired_current_y= FALSE;
-  }
-  else
-  {
-    *pknotData_mainStruct->isPaired_current_y= TRUE;
-    if (currentNuc_y > currentNuc_d)
+    while (pknotData_mainStruct->currentNuc_y<=pknotData_mainStruct->endNuc_y)
     {
-      *pknotData_mainStruct->is_yGRTd_current = TRUE;
-      *pknotData_mainStruct->is_dGRTy_current = FALSE;
-      
-    }
-    else
-    {
-      *pknotData_mainStruct->is_yGRTd_current = FALSE;
-      *pknotData_mainStruct->is_dGRTy_current = TRUE;
-    }
-  }
+        if(pknotData_mainStruct->currentNuc_y == -1)
+        {
+            *pknotData_mainStruct->isPaired_current_y= FALSE;
+        }
+        else
+        {
+            *pknotData_mainStruct->isPaired_current_y= TRUE;
+            if (currentNuc_y > currentNuc_d)
+            {
+            *pknotData_mainStruct->is_yGRTd_current = TRUE;
+            *pknotData_mainStruct->is_dGRTy_current = FALSE;
+            
+            }
+            else
+            {
+            *pknotData_mainStruct->is_yGRTd_current = FALSE;
+            *pknotData_mainStruct->is_dGRTy_current = TRUE;
+            }
+        }
 
-  if(pknotData_mainStruct->nextNuc_y == -1)
-  {
-    pknotData_mainStruct->isPaired_next_y= FALSE;
-  }
-  else
-  {
-    pknotData_mainStruct->isPaired_next_y= TRUE;
-     
+        if(pknotData_mainStruct->nextNuc_y == -1)
+        {
+            pknotData_mainStruct->isPaired_next_y= FALSE;
+        }
+        else
+        {
+            pknotData_mainStruct->isPaired_next_y= TRUE;
+            
 
-    if (currentNuc_y > currentNuc_d)
-    {
-      *pknotData_mainStruct->is_yGRTd_next = TRUE;
-      *pknotData_mainStruct->is_dGRTy_next = FALSE;
-    }
-    else
-    {
-      *pknotData_mainStruct->is_yGRTd_next = FALSE;
-      *pknotData_mainStruct->is_dGRTy_next = TRUE;
-    }
-  }
-  
-  // everything is initialized in the structure for the walk
-
-    //add the last nuc to the list
-    //add to the list immediatly when it is hit
-    
-  AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_behind_y_trackerList,
-                    pknotData_mainStruct->small_behind_y_trackerList_Count);
-
-  if (inGap==TRUE)
-  {
-    //indexToAdd = nucsLenght-gapNucs_Count;
-    //gapNucs[indexToAdd]=actualNuc;
-  }
-
-  if (inStack==TRUE)
-  {
-    //placeholder for this?
-  }
-
-  //now remove from the front
-  RemoveNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_front_y_trackerList
-                    pknotData_mainStruct->small_front_y_trackerList_Count);
-  
-  //now we know what should be behind and ahead and what has been found in its gap if applicable
-  //make a test data structure
-  struct PknotDetectionData pknotData_testStruct;
-  InitalizePknotStruct(*thefold, *pknotData_testStruct);
-  *pknotData_testStruct.currentNuc_y=pknotData_mainStruct->currentNuc_y;
-  *pknotData_testStruct.currentNuc_d=pknotData_mainStruct->currentNuc_d;
-  *pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
-  *pknotData_testStruct.thisSegmentLenght=0;
-
-  bool foundStructureType=FALSE;
-  if (pknotData_mainStruct.isPaired_current_y==TRUE)
-  {
-    //this nuc is paired so record in main structure tracker as well as the primary test tracker
-    AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->pairsNucs_trackerList,
-                    pknotData_mainStruct->pairsNucs_trackerList_Count)
-    
-    AddNuc_TrackerList(pknotData_testStruct->currentNuc_y, pknotData_testStruct->pairsNucs_trackerList,
-                    pknotData_testStruct->pairsNucs_trackerList_Count);
-    
-    //now need to see if next nuc is a gap, stack, or pknot in first part of identifying structure
-
-    //first check if the current nucs pair is in the current list of nucs in front
-    bool isValid_inFront = FALSE;
-    isValid_inFront = NucInTrackerList(pknotData_mainStruct.currentNuc_d, pknotData_mainStruct->small_front_y_trackerList,
-                                      pknotData_mainStruct->small_front_y_trackerList_Count);
-
-    if (isValid_inFront==TRUE)
-    {
-      //we are progressing through a normal sequence and stacks and it looks normal
-      //if in front is valid then its most likely not a pknot
-      //check next nuc pair
-
-      //this is potentialy a stack
-      SetStructureCondidence(TRUE, FALSE, FALSE,
-                            pknotData_mainStruct->isStack_suspected, 
-                            pknotData_mainStruct->isStack_confident, 
-                            pknotData_mainStruct->isStack_confirmed);
-
-      SetStructureCondidence(TRUE, FALSE, FALSE,
-                            pknotData_mainStruct->isBulge_suspected, 
-                            pknotData_mainStruct->isBulge_confident, 
-                            pknotData_mainStruct->isBulge_confirmed);
-      
-      SetStructureCondidence(TRUE, FALSE, FALSE,
-                            pknotData_mainStruct->isLoop_suspected, 
-                            pknotData_mainStruct->isLoop_confident, 
-                            pknotData_mainStruct->isLoop_confirmed);
-      
-      SetStructureCondidence(FALSE, FALSE, FALSE,
-                            pknotData_mainStruct->isPknot_suspected, 
-                            pknotData_mainStruct->isPknot_confident, 
-                            pknotData_mainStruct->isPknot_confirmed);
-      
-    }
-    else
-    {
-      //this is potentially in a pknot 
-      SetStructureCondidence(FALSE, FALSE, FALSE,
-                            pknotData_mainStruct->isStack_suspected, 
-                            pknotData_mainStruct->isStack_confident, 
-                            pknotData_mainStruct->isStack_confirmed);
-      
-      SetStructureCondidence(FALSE, FALSE, FALSE,
-                            pknotData_mainStruct->isBulge_suspected, 
-                            pknotData_mainStruct->isBulge_confident, 
-                            pknotData_mainStruct->isBulge_confirmed);
-      
-      SetStructureCondidence(FALSE, FALSE, FALSE,
-                            pknotData_mainStruct->isLoop_suspected, 
-                            pknotData_mainStruct->isLoop_confident, 
-                            pknotData_mainStruct->isLoop_confirmed);
-      
-      SetStructureCondidence(TRUE, FALSE, FALSE,
-                            pknotData_mainStruct->isPknot_suspected, 
-                            pknotData_mainStruct->isPknot_confident, 
-                            pknotData_mainStruct->isPknot_confirmed);
-    }
-    
-    //at this point we have suspicions only about the nucs\
-    //potential structures are LOOP, STACK, BULGE, PKNOT
-    //potential configs of individual nuc is UNPAIRD, PAIRED
-    //if in LOOP each nuc after a stack can be another stack nuc but each jump will always be in the original front list
-    //if in STACK then each y jump will have a d jump that is equivalent
-    //if in PKNOT each jump should give a wild number that may or may not return to orignal front list. that is why need reverse search in this case is suspected
-    
-    //test for LOOP, STACK, BULGE
-    bool structureFound=FALSE;
-    if (pknotData_mainStruct->isStack_suspected==TRUE)
-    {
-      //test for stack as it is suspected to be the pair that paw detected during walk
-      bool isStack = TestAfterPair_Stack(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
-      
-      if (isStack==TRUE)
-      {
-        SetStructureCondidence(TRUE, TRUE, FALSE,
-                              pknotData_mainStruct->isStack_suspected, 
-                              pknotData_mainStruct->isStack_confident, 
-                              pknotData_mainStruct->isStack_confirmed);
-
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isBulge_suspected, 
-                              pknotData_mainStruct->isBulge_confident, 
-                              pknotData_mainStruct->isBulge_confirmed);
+            if (currentNuc_y > currentNuc_d)
+            {
+            *pknotData_mainStruct->is_yGRTd_next = TRUE;
+            *pknotData_mainStruct->is_dGRTy_next = FALSE;
+            }
+            else
+            {
+            *pknotData_mainStruct->is_yGRTd_next = FALSE;
+            *pknotData_mainStruct->is_dGRTy_next = TRUE;
+            }
+        }
         
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isLoop_suspected, 
-                              pknotData_mainStruct->isLoop_confident, 
-                              pknotData_mainStruct->isLoop_confirmed);
-        foundStructureType = TRUE;
-      }
-      else
-      {
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isStack_suspected, 
-                              pknotData_mainStruct->isStack_confident, 
-                              pknotData_mainStruct->isStack_confirmed);
-      }
+        // everything is initialized in the structure for the walk
+
+            //add the last nuc to the list
+            //add to the list immediatly when it is hit
+            
+        AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_behind_y_trackerList,
+                            pknotData_mainStruct->small_behind_y_trackerList_Count);
+
+        if (inGap==TRUE)
+        {
+            //indexToAdd = nucsLenght-gapNucs_Count;
+            //gapNucs[indexToAdd]=actualNuc;
+        }
+
+        if (inStack==TRUE)
+        {
+            //placeholder for this?
+        }
+
+        //now remove from the front
+        RemoveNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_front_y_trackerList
+                            pknotData_mainStruct->small_front_y_trackerList_Count);
+        
+        //now we know what should be behind and ahead and what has been found in its gap if applicable
+        //make a test data structure
+        struct PknotDetectionData pknotData_testStruct;
+        InitalizePknotStruct(*thefold, *pknotData_testStruct);
+        *pknotData_testStruct.currentNuc_y=pknotData_mainStruct->currentNuc_y;
+        *pknotData_testStruct.currentNuc_d=pknotData_mainStruct->currentNuc_d;
+        *pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
+        *pknotData_testStruct.thisSegmentLenght=0;
+
+        bool foundStructureType=FALSE;
+        if (pknotData_mainStruct.isPaired_current_y==TRUE)
+        {
+            //this nuc is paired so record in main structure tracker as well as the primary test tracker
+            AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->pairsNucs_trackerList,
+                            pknotData_mainStruct->pairsNucs_trackerList_Count)
+            
+            AddNuc_TrackerList(pknotData_testStruct->currentNuc_y, pknotData_testStruct->pairsNucs_trackerList,
+                            pknotData_testStruct->pairsNucs_trackerList_Count);
+            
+            //now need to see if next nuc is a gap, stack, or pknot in first part of identifying structure
+
+            //first check if the current nucs pair is in the current list of nucs in front
+            bool isValid_inFront = FALSE;
+            isValid_inFront = NucInTrackerList(pknotData_mainStruct.currentNuc_d, pknotData_mainStruct->small_front_y_trackerList,
+                                            pknotData_mainStruct->small_front_y_trackerList_Count);
+
+            if (isValid_inFront==TRUE)
+            {
+            //we are progressing through a normal sequence and stacks and it looks normal
+            //if in front is valid then its most likely not a pknot
+            //check next nuc pair
+
+            //this is potentialy a stack
+            SetStructureCondidence(TRUE, FALSE, FALSE,
+                                    pknotData_mainStruct->isStack_suspected, 
+                                    pknotData_mainStruct->isStack_confident, 
+                                    pknotData_mainStruct->isStack_confirmed);
+
+            SetStructureCondidence(TRUE, FALSE, FALSE,
+                                    pknotData_mainStruct->isBulge_suspected, 
+                                    pknotData_mainStruct->isBulge_confident, 
+                                    pknotData_mainStruct->isBulge_confirmed);
+            
+            SetStructureCondidence(TRUE, FALSE, FALSE,
+                                    pknotData_mainStruct->isLoop_suspected, 
+                                    pknotData_mainStruct->isLoop_confident, 
+                                    pknotData_mainStruct->isLoop_confirmed);
+            
+            SetStructureCondidence(FALSE, FALSE, FALSE,
+                                    pknotData_mainStruct->isPknot_suspected, 
+                                    pknotData_mainStruct->isPknot_confident, 
+                                    pknotData_mainStruct->isPknot_confirmed);
+            
+            }
+            else
+            {
+            //this is potentially in a pknot 
+            SetStructureCondidence(FALSE, FALSE, FALSE,
+                                    pknotData_mainStruct->isStack_suspected, 
+                                    pknotData_mainStruct->isStack_confident, 
+                                    pknotData_mainStruct->isStack_confirmed);
+            
+            SetStructureCondidence(FALSE, FALSE, FALSE,
+                                    pknotData_mainStruct->isBulge_suspected, 
+                                    pknotData_mainStruct->isBulge_confident, 
+                                    pknotData_mainStruct->isBulge_confirmed);
+            
+            SetStructureCondidence(FALSE, FALSE, FALSE,
+                                    pknotData_mainStruct->isLoop_suspected, 
+                                    pknotData_mainStruct->isLoop_confident, 
+                                    pknotData_mainStruct->isLoop_confirmed);
+            
+            SetStructureCondidence(TRUE, FALSE, FALSE,
+                                    pknotData_mainStruct->isPknot_suspected, 
+                                    pknotData_mainStruct->isPknot_confident, 
+                                    pknotData_mainStruct->isPknot_confirmed);
+            }
+            
+            //at this point we have suspicions only about the nucs\
+            //potential structures are LOOP, STACK, BULGE, PKNOT
+            //potential configs of individual nuc is UNPAIRD, PAIRED
+            //if in LOOP each nuc after a stack can be another stack nuc but each jump will always be in the original front list
+            //if in STACK then each y jump will have a d jump that is equivalent
+            //if in PKNOT each jump should give a wild number that may or may not return to orignal front list. that is why need reverse search in this case is suspected
+            
+            //test for LOOP, STACK, BULGE
+            bool structureFound=FALSE;
+            if (pknotData_mainStruct->isStack_suspected==TRUE)
+            {
+                //test for stack as it is suspected to be the pair that paw detected during walk
+                bool isStack = TestAfterPair_Stack(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+                
+                if (isStack==TRUE)
+                {
+                    SetStructureCondidence(TRUE, TRUE, FALSE,
+                                        pknotData_mainStruct->isStack_suspected, 
+                                        pknotData_mainStruct->isStack_confident, 
+                                        pknotData_mainStruct->isStack_confirmed);
+
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isBulge_suspected, 
+                                        pknotData_mainStruct->isBulge_confident, 
+                                        pknotData_mainStruct->isBulge_confirmed);
+                    
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isLoop_suspected, 
+                                        pknotData_mainStruct->isLoop_confident, 
+                                        pknotData_mainStruct->isLoop_confirmed);
+                    foundStructureType = TRUE;
+                }
+                else
+                {
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isStack_suspected, 
+                                        pknotData_mainStruct->isStack_confident, 
+                                        pknotData_mainStruct->isStack_confirmed);
+                }
+            }
+
+            if (pknotData_mainStruct->isBulge_suspected==TRUE)
+            {
+                //test for stack as it is suspected to be the pair that paw detected during walk
+                bool isBulge = TestAfterPair_Bulge(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+                
+                if (isBulge==TRUE)
+                {
+                    SetStructureCondidence(TRUE, TRUE, FALSE,
+                                        pknotData_mainStruct->isBulge_suspected, 
+                                        pknotData_mainStruct->isBulge_confident, 
+                                        pknotData_mainStruct->isBulge_confirmed);
+
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isStack_suspected, 
+                                        pknotData_mainStruct->isStack_confident, 
+                                        pknotData_mainStruct->isStack_confirmed);
+
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isLoop_suspected, 
+                                        pknotData_mainStruct->isLoop_confident, 
+                                        pknotData_mainStruct->isLoop_confirmed);
+                    foundStructureType = TRUE;
+                }
+                else
+                {
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isBulge_suspected, 
+                                        pknotData_mainStruct->isBulge_confident, 
+                                        pknotData_mainStruct->isBulge_confirmed);
+                }
+            }
+
+            if (pknotData_mainStruct->isLoop_suspected==TRUE)
+            {
+                //test for stack as it is suspected to be the pair that paw detected during walk
+                bool isLoop = TestAfterPair_Loop(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+                
+                if (isLoop==TRUE)
+                {
+                    SetStructureCondidence(TRUE, TRUE, FALSE,
+                                        pknotData_mainStruct->isLoop_suspected, 
+                                        pknotData_mainStruct->isLoop_confident, 
+                                        pknotData_mainStruct->isLoop_confirmed);
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isBulge_suspected, 
+                                        pknotData_mainStruct->isBulge_confident, 
+                                        pknotData_mainStruct->isBulge_confirmed);
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isStack_suspected, 
+                                        pknotData_mainStruct->isStack_confident, 
+                                        pknotData_mainStruct->isStack_confirmed);
+                    foundStructureType = TRUE;
+                }
+                else
+                {
+                    SetStructureCondidence(FALSE, FALSE, FALSE,
+                                        pknotData_mainStruct->isLoop_suspected, 
+                                        pknotData_mainStruct->isLoop_confident, 
+                                        pknotData_mainStruct->isLoop_confirmed);
+                }
+            }
+            
+            
+            if (pknotData_mainStruct->isPknot_suspected==TRUE || foundStructureType == FALSE;)
+            {
+                //test for pknot      
+                isPknot_finalAnswer = TestAfterPairFound_IsPknot(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, pknotData_mainStruct, thefold );
+
+                if (isPknot_finalAnswer==TRUE)
+                {
+                    PknotFoundInSequence=TRUE;
+                    *thefold->actualPknots[pknotData_mainStruct->currentNuc_y]=pknotData_mainStruct->currentNuc_d; 
+                }
+            }    
+
+            
+        } 
+        else
+        {
+            //current_y was not paired so go to the next nuc            
+        }
+
+        //now go to next y in sequnce for next nuc inspection
+        *pknotData_mainStruct->currentNuc_y++;
     }
 
-    if (pknotData_mainStruct->isBulge_suspected==TRUE)
-    {
-      //test for stack as it is suspected to be the pair that paw detected during walk
-      bool isBulge = TestAfterPair_Bulge(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
-      
-      if (isBulge==TRUE)
-      {
-        SetStructureCondidence(TRUE, TRUE, FALSE,
-                              pknotData_mainStruct->isBulge_suspected, 
-                              pknotData_mainStruct->isBulge_confident, 
-                              pknotData_mainStruct->isBulge_confirmed);
-
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isStack_suspected, 
-                              pknotData_mainStruct->isStack_confident, 
-                              pknotData_mainStruct->isStack_confirmed);
-
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isLoop_suspected, 
-                              pknotData_mainStruct->isLoop_confident, 
-                              pknotData_mainStruct->isLoop_confirmed);
-        foundStructureType = TRUE;
-      }
-      else
-      {
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isBulge_suspected, 
-                              pknotData_mainStruct->isBulge_confident, 
-                              pknotData_mainStruct->isBulge_confirmed);
-      }
-    }
-
-    if (pknotData_mainStruct->isLoop_suspected==TRUE)
-    {
-      //test for stack as it is suspected to be the pair that paw detected during walk
-      bool isLoop = TestAfterPair_Loop(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
-      
-      if (isLoop==TRUE)
-      {
-        SetStructureCondidence(TRUE, TRUE, FALSE,
-                              pknotData_mainStruct->isLoop_suspected, 
-                              pknotData_mainStruct->isLoop_confident, 
-                              pknotData_mainStruct->isLoop_confirmed);
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isBulge_suspected, 
-                              pknotData_mainStruct->isBulge_confident, 
-                              pknotData_mainStruct->isBulge_confirmed);
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isStack_suspected, 
-                              pknotData_mainStruct->isStack_confident, 
-                              pknotData_mainStruct->isStack_confirmed);
-        foundStructureType = TRUE;
-      }
-      else
-      {
-        SetStructureCondidence(FALSE, FALSE, FALSE,
-                              pknotData_mainStruct->isLoop_suspected, 
-                              pknotData_mainStruct->isLoop_confident, 
-                              pknotData_mainStruct->isLoop_confirmed);
-      }
-    }
-    
-    
-    if (pknotData_mainStruct->isPknot_suspected==TRUE || foundStructureType == FALSE;)
-    {
-      //test for pknot      
-      isPknot_finalAnswer = TestAfterPairFound_IsPknot(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, pknotData_mainStruct, thefold );
-    }
-
-    
-  } 
-
+  
   //need to change this to now walk the whole structre and log pknots then pass whether one was found or not
-  return isPknot_finalAnswer; 
+  return PknotFoundInSequence; 
 };
 
 bool TestAfterPair_LoopOrGap(int start_y, int start_d, fold *thefold)
