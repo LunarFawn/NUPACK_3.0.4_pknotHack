@@ -372,9 +372,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                     PknotFoundInSequence=TRUE;
                     *thefold->actualPknots[pknotData_mainStruct->currentNuc_y]=pknotData_mainStruct->currentNuc_d; 
                 }
-            }    
-
-            
+            }                
         } 
         else
         {
@@ -383,9 +381,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
 
         //now go to next y in sequnce for next nuc inspection
         *pknotData_mainStruct->currentNuc_y++;
-    }
-
-  
+    }  
   //need to change this to now walk the whole structre and log pknots then pass whether one was found or not
   return PknotFoundInSequence; 
 };
