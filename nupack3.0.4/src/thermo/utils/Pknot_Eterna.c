@@ -103,36 +103,36 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
         AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_behind_y_trackerList,
                             pknotData_mainStruct->small_behind_y_trackerList_Count);
 
-        if (inGap==TRUE)
+        if (pknotData_mainStruct->inGap==TRUE)
         {
             //indexToAdd = nucsLenght-gapNucs_Count;
             //gapNucs[indexToAdd]=actualNuc;
         }
 
-        if (inStack==TRUE)
+        if (pknotData_mainStruct->inStack==TRUE)
         {
             //placeholder for this?
         }
 
         //now remove from the front
-        RemoveNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_front_y_trackerList
-                            pknotData_mainStruct->small_front_y_trackerList_Count);
+        RemoveNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_front_y_trackerList,
+                              pknotData_mainStruct->small_front_y_trackerList_Count);
         
         //now we know what should be behind and ahead and what has been found in its gap if applicable
         //make a test data structure
-        struct PknotDetectionData pknotData_testStruct;
-        InitalizePknotStruct(*thefold, *pknotData_testStruct);
-        pknotData_testStruct.currentNuc_y=pknotData_mainStruct->currentNuc_y;
-        pknotData_testStruct.currentNuc_d=pknotData_mainStruct->currentNuc_d;
-        pknotData_testStruct.fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
-        pknotData_testStruct.thisSegmentLenght=0;
+        struct PknotDetectionData *pknotData_testStruct;
+        InitalizePknotStruct(thefold, pknotData_testStruct);
+        pknotData_testStruct->currentNuc_y=pknotData_mainStruct->currentNuc_y;
+        pknotData_testStruct->currentNuc_d=pknotData_mainStruct->currentNuc_d;
+        pknotData_testStruct->fullSequenceLenght=pknotData_mainStruct->fullSequenceLenght;
+        pknotData_testStruct->thisSegmentLenght=0;
 
         bool foundStructureType=FALSE;
-        if (pknotData_mainStruct.isPaired_current_y==TRUE)
+        if (pknotData_mainStruct->isPaired_current_y==TRUE)
         {
             //this nuc is paired so record in main structure tracker as well as the primary test tracker
             AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->pairsNucs_trackerList,
-                            pknotData_mainStruct->pairsNucs_trackerList_Count)
+                            pknotData_mainStruct->pairsNucs_trackerList_Count);
             
             AddNuc_TrackerList(pknotData_testStruct->currentNuc_y, pknotData_testStruct->pairsNucs_trackerList,
                             pknotData_testStruct->pairsNucs_trackerList_Count);
@@ -141,7 +141,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
 
             //first check if the current nucs pair is in the current list of nucs in front
             bool isValid_inFront = FALSE;
-            isValid_inFront = NucInTrackerList(pknotData_mainStruct.currentNuc_d, pknotData_mainStruct->small_front_y_trackerList,
+            isValid_inFront = NucInTrackerList(pknotData_mainStruct->currentNuc_d, pknotData_mainStruct->small_front_y_trackerList,
                                             pknotData_mainStruct->small_front_y_trackerList_Count);
 
             if (isValid_inFront==TRUE)
@@ -152,48 +152,48 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
 
             //this is potentialy a stack
             SetStructureCondidence(TRUE, FALSE, FALSE,
-                                    pknotData_mainStruct->isStack_suspected, 
-                                    pknotData_mainStruct->isStack_confident, 
-                                    pknotData_mainStruct->isStack_confirmed);
+                                    &pknotData_mainStruct->isStack_suspected, 
+                                    &pknotData_mainStruct->isStack_confident, 
+                                    &pknotData_mainStruct->isStack_confirmed);
 
             SetStructureCondidence(TRUE, FALSE, FALSE,
-                                    pknotData_mainStruct->isBulge_suspected, 
-                                    pknotData_mainStruct->isBulge_confident, 
-                                    pknotData_mainStruct->isBulge_confirmed);
+                                    &pknotData_mainStruct->isBulge_suspected, 
+                                    &pknotData_mainStruct->isBulge_confident, 
+                                    &pknotData_mainStruct->isBulge_confirmed);
             
             SetStructureCondidence(TRUE, FALSE, FALSE,
-                                    pknotData_mainStruct->isLoop_suspected, 
-                                    pknotData_mainStruct->isLoop_confident, 
-                                    pknotData_mainStruct->isLoop_confirmed);
+                                    &pknotData_mainStruct->isLoop_suspected, 
+                                    &pknotData_mainStruct->isLoop_confident, 
+                                    &pknotData_mainStruct->isLoop_confirmed);
             
             SetStructureCondidence(FALSE, FALSE, FALSE,
-                                    pknotData_mainStruct->isPknot_suspected, 
-                                    pknotData_mainStruct->isPknot_confident, 
-                                    pknotData_mainStruct->isPknot_confirmed);
+                                    &pknotData_mainStruct->isPknot_suspected, 
+                                    &pknotData_mainStruct->isPknot_confident, 
+                                    &pknotData_mainStruct->isPknot_confirmed);
             
             }
             else
             {
             //this is potentially in a pknot 
             SetStructureCondidence(FALSE, FALSE, FALSE,
-                                    pknotData_mainStruct->isStack_suspected, 
-                                    pknotData_mainStruct->isStack_confident, 
-                                    pknotData_mainStruct->isStack_confirmed);
+                                    &pknotData_mainStruct->isStack_suspected, 
+                                    &pknotData_mainStruct->isStack_confident, 
+                                    &pknotData_mainStruct->isStack_confirmed);
             
             SetStructureCondidence(FALSE, FALSE, FALSE,
-                                    pknotData_mainStruct->isBulge_suspected, 
-                                    pknotData_mainStruct->isBulge_confident, 
-                                    pknotData_mainStruct->isBulge_confirmed);
+                                    &pknotData_mainStruct->isBulge_suspected, 
+                                    &pknotData_mainStruct->isBulge_confident, 
+                                    &pknotData_mainStruct->isBulge_confirmed);
             
             SetStructureCondidence(FALSE, FALSE, FALSE,
-                                    pknotData_mainStruct->isLoop_suspected, 
-                                    pknotData_mainStruct->isLoop_confident, 
-                                    pknotData_mainStruct->isLoop_confirmed);
+                                    &pknotData_mainStruct->isLoop_suspected, 
+                                    &pknotData_mainStruct->isLoop_confident, 
+                                    &pknotData_mainStruct->isLoop_confirmed);
             
             SetStructureCondidence(TRUE, FALSE, FALSE,
-                                    pknotData_mainStruct->isPknot_suspected, 
-                                    pknotData_mainStruct->isPknot_confident, 
-                                    pknotData_mainStruct->isPknot_confirmed);
+                                    &pknotData_mainStruct->isPknot_suspected, 
+                                    &pknotData_mainStruct->isPknot_confident, 
+                                    &pknotData_mainStruct->isPknot_confirmed);
             }
             
             //at this point we have suspicions only about the nucs\
@@ -208,32 +208,32 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
             if (pknotData_mainStruct->isStack_suspected==TRUE)
             {
                 //test for stack as it is suspected to be the pair that paw detected during walk
-                bool isStack = TestAfterPair_Stack(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+                bool isStack = TestAfterPair_Stack(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, thefold);
                 
                 if (isStack==TRUE)
                 {
                     SetStructureCondidence(TRUE, TRUE, FALSE,
-                                        pknotData_mainStruct->isStack_suspected, 
-                                        pknotData_mainStruct->isStack_confident, 
-                                        pknotData_mainStruct->isStack_confirmed);
+                                        &pknotData_mainStruct->isStack_suspected, 
+                                        &pknotData_mainStruct->isStack_confident, 
+                                        &pknotData_mainStruct->isStack_confirmed);
 
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isBulge_suspected, 
-                                        pknotData_mainStruct->isBulge_confident, 
-                                        pknotData_mainStruct->isBulge_confirmed);
+                                        &pknotData_mainStruct->isBulge_suspected, 
+                                        &pknotData_mainStruct->isBulge_confident, 
+                                        &pknotData_mainStruct->isBulge_confirmed);
                     
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isLoop_suspected, 
-                                        pknotData_mainStruct->isLoop_confident, 
-                                        pknotData_mainStruct->isLoop_confirmed);
+                                        &pknotData_mainStruct->isLoop_suspected, 
+                                        &pknotData_mainStruct->isLoop_confident, 
+                                        &pknotData_mainStruct->isLoop_confirmed);
                     foundStructureType = TRUE;
                 }
                 else
                 {
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isStack_suspected, 
-                                        pknotData_mainStruct->isStack_confident, 
-                                        pknotData_mainStruct->isStack_confirmed);
+                                        &pknotData_mainStruct->isStack_suspected, 
+                                        &pknotData_mainStruct->isStack_confident, 
+                                        &pknotData_mainStruct->isStack_confirmed);
                 }
             }
 
@@ -245,27 +245,27 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                 if (isBulge==TRUE)
                 {
                     SetStructureCondidence(TRUE, TRUE, FALSE,
-                                        pknotData_mainStruct->isBulge_suspected, 
-                                        pknotData_mainStruct->isBulge_confident, 
-                                        pknotData_mainStruct->isBulge_confirmed);
+                                        &pknotData_mainStruct->isBulge_suspected, 
+                                        &pknotData_mainStruct->isBulge_confident, 
+                                        &pknotData_mainStruct->isBulge_confirmed);
 
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isStack_suspected, 
-                                        pknotData_mainStruct->isStack_confident, 
-                                        pknotData_mainStruct->isStack_confirmed);
+                                        &pknotData_mainStruct->isStack_suspected, 
+                                        &pknotData_mainStruct->isStack_confident, 
+                                        &pknotData_mainStruct->isStack_confirmed);
 
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isLoop_suspected, 
-                                        pknotData_mainStruct->isLoop_confident, 
-                                        pknotData_mainStruct->isLoop_confirmed);
+                                        &pknotData_mainStruct->isLoop_suspected, 
+                                        &pknotData_mainStruct->isLoop_confident, 
+                                        &pknotData_mainStruct->isLoop_confirmed);
                     foundStructureType = TRUE;
                 }
                 else
                 {
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isBulge_suspected, 
-                                        pknotData_mainStruct->isBulge_confident, 
-                                        pknotData_mainStruct->isBulge_confirmed);
+                                        &pknotData_mainStruct->isBulge_suspected, 
+                                        &pknotData_mainStruct->isBulge_confident, 
+                                        &pknotData_mainStruct->isBulge_confirmed);
                 }
             }
 
@@ -277,30 +277,30 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                 if (isLoop==TRUE)
                 {
                     SetStructureCondidence(TRUE, TRUE, FALSE,
-                                        pknotData_mainStruct->isLoop_suspected, 
-                                        pknotData_mainStruct->isLoop_confident, 
-                                        pknotData_mainStruct->isLoop_confirmed);
+                                        &pknotData_mainStruct->isLoop_suspected, 
+                                        &pknotData_mainStruct->isLoop_confident, 
+                                        &pknotData_mainStruct->isLoop_confirmed);
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isBulge_suspected, 
-                                        pknotData_mainStruct->isBulge_confident, 
-                                        pknotData_mainStruct->isBulge_confirmed);
+                                        &pknotData_mainStruct->isBulge_suspected, 
+                                        &pknotData_mainStruct->isBulge_confident, 
+                                        &pknotData_mainStruct->isBulge_confirmed);
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isStack_suspected, 
-                                        pknotData_mainStruct->isStack_confident, 
-                                        pknotData_mainStruct->isStack_confirmed);
+                                        &pknotData_mainStruct->isStack_suspected, 
+                                        &pknotData_mainStruct->isStack_confident, 
+                                        &pknotData_mainStruct->isStack_confirmed);
                     foundStructureType = TRUE;
                 }
                 else
                 {
                     SetStructureCondidence(FALSE, FALSE, FALSE,
-                                        pknotData_mainStruct->isLoop_suspected, 
-                                        pknotData_mainStruct->isLoop_confident, 
-                                        pknotData_mainStruct->isLoop_confirmed);
+                                        &pknotData_mainStruct->isLoop_suspected, 
+                                        &pknotData_mainStruct->isLoop_confident, 
+                                        &pknotData_mainStruct->isLoop_confirmed);
                 }
             }
             
             
-            if (pknotData_mainStruct->isPknot_suspected==TRUE || foundStructureType == FALSE;)
+            if (pknotData_mainStruct->isPknot_suspected==TRUE || foundStructureType == FALSE)
             {
                 //test for pknot      
                 isPknot_finalAnswer = TestAfterPairFound_IsPknot(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, pknotData_mainStruct, thefold );
@@ -334,7 +334,7 @@ bool TestAfterPair_LoopOrGap(int start_y, int start_d, fold *thefold)
   int j_second = start_d-1;
   if (i_second == -1 && j_second == -1)
   {
-    isLoop = TRUE
+    isLoop = TRUE;
   }
   return isLoop;
 };
@@ -416,80 +416,80 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   //main seeking trackers
   //small to large trackers
 
-  *tempPknot.small_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.small_behind_y_trackerList_Count = 0;
-  *tempPknot.small_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.small_front_y_trackerList_Count = nucsLenght;
+  tempPknot->small_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  tempPknot->small_behind_y_trackerList_Count = 0;
+  tempPknot->small_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  tempPknot->small_front_y_trackerList_Count = thefold->seqlength;
   
   //large to small trackers
-  *tempPknot.large_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.large_behind_y_trackerList_Count = 0;
-  *tempPknot.large_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.large_front_y_trackerList_Count = nucsLenght;
+  tempPknot->large_behind_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  tempPknot->large_behind_y_trackerList_Count = 0;
+  tempPknot->large_front_y_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  tempPknot->large_front_y_trackerList_Count = thefold->seqlength;
   
   
   //gap and trackers 
-  *tempPknot.gapNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.gapNucs_trackerList_Count = 0;
-  *tempPknot.pairsNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
-  *tempPknot.pairsNucs_trackerList_Count = 0;
+  tempPknot->gapNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  tempPknot->gapNucs_trackerList_Count = 0;
+  tempPknot->pairsNucs_trackerList = (int*) calloc( thefold->seqlength, sizeof(int));
+  tempPknot->pairsNucs_trackerList_Count = 0;
 
 
  int indexToAdd = -1;
   //initialize nucs front list
   for (int index = 0; index < nucsLenght, index++)
   {
-    *tempPknot.small_behind_y_trackerList[index] = -1;  
-    *tempPknot.small_front_y_trackerList[index] = index;
+    tempPknot->small_behind_y_trackerList[index] = -1;  
+    tempPknot->small_front_y_trackerList[index] = index;
     
     //large to small trackers
-    *tempPknot.large_behind_y_trackerList[index] = -1;  
-    *tempPknot.large_front_y_trackerList[index] = index;  
+    tempPknot->large_behind_y_trackerList[index] = -1;  
+    tempPknot->large_front_y_trackerList[index] = index;  
     
     //gap and trackers 
-    *tempPknot.gapNucs_trackerList[index] = -1; 
-    *tempPknot.pairsNucs_trackerList[index] = -1;  
+    tempPknot->gapNucs_trackerList[index] = -1; 
+    tempPknot->pairsNucs_trackerList[index] = -1;  
   }
 
   //utils
-  *tempPknot.nucsLenght = -1;
-  *tempPknot.fullSequenceLenght = thefold->seqlength;
-  *tempPknot.thisSegmentLenght = -1;
-  *tempPknot.currentNuc_y = -1;
-  *tempPknot.currentNuc_d = -1;
-  *tempPknot.endNuc_y = -1;
-  *tempPknot.isPaired_current_y = FALSE;
-  *tempPknot.is_yGRTd_current = FALSE;
-  *tempPknot.is_dGRTy_current = FALSE;
+  tempPknot->nucsLenght = -1;
+  tempPknot->fullSequenceLenght = thefold->seqlength;
+  tempPknot->thisSegmentLenght = -1;
+  tempPknot->currentNuc_y = -1;
+  tempPknot->currentNuc_d = -1;
+  tempPknot->endNuc_y = -1;
+  tempPknot->isPaired_current_y = FALSE;
+  tempPknot->is_yGRTd_current = FALSE;
+  tempPknot->is_dGRTy_current = FALSE;
   
-  *tempPknot.nextNuc_y = -1;
-  *tempPknot.nextNuc_d = -1;
-  *tempPknot.isPaired_next_y = FALSE;
-  *tempPknot.is_yGRTd_next = FALSE;
-  *tempPknot.is_dGRTy_next = FALSE;
+  tempPknot->nextNuc_y = -1;
+  tempPknot->nextNuc_d = -1;
+  tempPknot->isPaired_next_y = FALSE;
+  tempPknot->is_yGRTd_next = FALSE;
+  tempPknot->is_dGRTy_next = FALSE;
   
   //loop, bulge, stack, pknot boolean logic variables
-  *tempPknot.inGap = FALSE;
+  tempPknot->inGap = FALSE;
+  tempPknot->inStack = FALSE;
+  tempPknot->isLoop_suspected = FALSE;
+  tempPknot->isLoop_confident = FALSE;
+  tempPknot->isLoop_confirmed = FALSE;
 
-  *tempPknot.isLoop_suspected = FALSE;
-  *tempPknot.isLoop_confident = FALSE;
-  *tempPknot.isLoop_confirmed = FALSE;
-
-  *tempPknot.isBulge_suspected = FALSE;
-  *tempPknot.isBulge_confident = FALSE;
-  *tempPknot.isBulge_confirmed = FALSE; 
+  tempPknot->isBulge_suspected = FALSE;
+  tempPknot->isBulge_confident = FALSE;
+  tempPknot->isBulge_confirmed = FALSE; 
  
-  *tempPknot.isStack_suspected = FALSE;
-  *tempPknot.isStack_confident = FALSE;
-  *tempPknot.isStack_confirmed = FALSE;
+  tempPknot->isStack_suspected = FALSE;
+  tempPknot->isStack_confident = FALSE;
+  tempPknot->isStack_confirmed = FALSE;
 
-  *tempPknot.isPknot_suspected = FALSE;
-  *tempPknot.isPknot_confident = FALSE;
-  *tempPknot.isPknot_confirmed = FALSE;
-  *tempPknot.isValidFront_nextNuc_y = FALSE;
-  *tempPknot->isValidFront_nextNuc_d=FALSE;
-  *tempPknot->isValidFront_currentNuc_y=FALSE;
-  *tempPknot->isValidFront_currentNuc_d=FALSE;
+  tempPknot->isPknot_suspected = FALSE;
+  tempPknot->isPknot_confident = FALSE;
+  tempPknot->isPknot_confirmed = FALSE;
+  tempPknot->isValidFront_nextNuc_y = FALSE;
+  tempPknot->isValidFront_nextNuc_d=FALSE;
+  tempPknot->isValidFront_currentNuc_y=FALSE;
+  tempPknot->isValidFront_currentNuc_d=FALSE;
 };
 
 void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
@@ -502,12 +502,12 @@ void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
 void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
 {
   //now remove from the front
-  for (int index = 0; index < trackerList_Count, index++)
+  for (int index = 0; index < trackerList_Count; index++)
   {
     if (trackerList[index] == y)
     {
-      *trackerList[index] = -1;
-      *trackerList_Count--;
+      trackerList[index] = -1;
+      trackerList_Count--;
     }
   } 
 };
