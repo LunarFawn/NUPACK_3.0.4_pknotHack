@@ -101,7 +101,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
             //add to the list immediatly when it is hit
             
         AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_behind_y_trackerList,
-                            pknotData_mainStruct->small_behind_y_trackerList_Count);
+                            &pknotData_mainStruct->small_behind_y_trackerList_Count, pknotData_mainStruct->fullSequenceLenght);
 
         if (pknotData_mainStruct->inGap==TRUE)
         {
@@ -116,7 +116,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
 
         //now remove from the front
         RemoveNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->small_front_y_trackerList,
-                              pknotData_mainStruct->small_front_y_trackerList_Count);
+                              &pknotData_mainStruct->small_front_y_trackerList_Count);
         
         //now we know what should be behind and ahead and what has been found in its gap if applicable
         //make a test data structure
@@ -132,10 +132,10 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
         {
             //this nuc is paired so record in main structure tracker as well as the primary test tracker
             AddNuc_TrackerList(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->pairsNucs_trackerList,
-                            pknotData_mainStruct->pairsNucs_trackerList_Count);
+                            &pknotData_mainStruct->pairsNucs_trackerList_Count, pknotData_mainStruct->fullSequenceLenght);
             
             AddNuc_TrackerList(pknotData_testStruct->currentNuc_y, pknotData_testStruct->pairsNucs_trackerList,
-                            pknotData_testStruct->pairsNucs_trackerList_Count);
+                            &pknotData_testStruct->pairsNucs_trackerList_Count, pknotData_mainStruct->fullSequenceLenght);
             
             //now need to see if next nuc is a gap, stack, or pknot in first part of identifying structure
 
@@ -196,12 +196,13 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
                                     &pknotData_mainStruct->isPknot_confirmed);
             }
             
-            //at this point we have suspicions only about the nucs\
-            //potential structures are LOOP, STACK, BULGE, PKNOT
-            //potential configs of individual nuc is UNPAIRD, PAIRED
-            //if in LOOP each nuc after a stack can be another stack nuc but each jump will always be in the original front list
-            //if in STACK then each y jump will have a d jump that is equivalent
-            //if in PKNOT each jump should give a wild number that may or may not return to orignal front list. that is why need reverse search in this case is suspected
+            /*at this point we have suspicions only about the nucs*/
+            /*potential structures are LOOP, STACK, BULGE, PKNOT*/
+            /*potential configs of individual nuc is UNPAIRD, PAIRED*/
+            /*if in LOOP each nuc after a stack can be another stack nuc but each jump will always be in the original front list*/
+            /*if in STACK then each y jump will have a d jump that is equivalent*/
+            /*if in PKNOT each jump should give a wild number that may or may not return to orignal front list. */
+            /*that is why need reverse search in this case is suspected*/
             
             //test for LOOP, STACK, BULGE
             bool structureFound=FALSE;
@@ -240,7 +241,8 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
             if (pknotData_mainStruct->isBulge_suspected==TRUE)
             {
                 //test for stack as it is suspected to be the pair that paw detected during walk
-                bool isBulge = TestAfterPair_Bulge(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+                bool isBulge = TestAfterPair_Bulge(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d,
+                                                    &pknotData_mainStruct->unpairedGapNuc_Startindex, thefold);
                 
                 if (isBulge==TRUE)
                 {
@@ -272,7 +274,7 @@ bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc,
             if (pknotData_mainStruct->isLoop_suspected==TRUE)
             {
                 //test for stack as it is suspected to be the pair that paw detected during walk
-                bool isLoop = TestAfterPair_Loop(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d);
+                bool isLoop = TestAfterPair_LoopOrGap(pknotData_mainStruct->currentNuc_y, pknotData_mainStruct->currentNuc_d, thefold);
                 
                 if (isLoop==TRUE)
                 {
@@ -339,7 +341,7 @@ bool TestAfterPair_LoopOrGap(int start_y, int start_d, fold *thefold)
   return isLoop;
 };
 
-bool TestAfterPair_Bulge(int start_y, int start_d, int *unpairedNucStart, fold *thefold)
+bool TestAfterPair_Bulge(int start_y, int start_d, int *unpairedGapNuc_Startindex, fold *thefold)
 {
   //is BULGE if i_second IS paired but j_second IS NOT or i_second IS NOT paired but j_second IS  
   bool isBulge = FALSE;
@@ -349,13 +351,13 @@ bool TestAfterPair_Bulge(int start_y, int start_d, int *unpairedNucStart, fold *
   int j_second = start_d-1;
   if (i_second != -1 && j_second == -1)
   {
-    unpairedNucStart=j_second;
-    isBulge = TRUE
+    unpairedGapNuc_Startindex=&j_second;
+    isBulge = TRUE;
   }
   else if (i_second == -1 && j_second != -1)
   {
-    unpairedNucStart=i_second;
-    isBulge = TRUE
+    unpairedGapNuc_Startindex=&i_second;
+    isBulge = TRUE;
   }
   return isBulge;
 }; 
@@ -381,7 +383,7 @@ bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold)
   int j_second = thefold->pairs[i_second];
   if (i_second != -1)
   {
-    isPaired_second = TRUE
+    isPaired_second = TRUE;
   }
 
   //if both nucs are paired then it might be in a stack
@@ -437,7 +439,7 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
 
  int indexToAdd = -1;
   //initialize nucs front list
-  for (int index = 0; index < nucsLenght, index++)
+  for (int index = 0; index < thefold->seqlength; index++)
   {
     tempPknot->small_behind_y_trackerList[index] = -1;  
     tempPknot->small_front_y_trackerList[index] = index;
@@ -458,6 +460,7 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   tempPknot->currentNuc_y = -1;
   tempPknot->currentNuc_d = -1;
   tempPknot->endNuc_y = -1;
+  tempPknot->unpairedGapNuc_Startindex = -1;
   tempPknot->isPaired_current_y = FALSE;
   tempPknot->is_yGRTd_current = FALSE;
   tempPknot->is_dGRTy_current = FALSE;
@@ -490,19 +493,23 @@ void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot)
   tempPknot->isValidFront_nextNuc_d=FALSE;
   tempPknot->isValidFront_currentNuc_y=FALSE;
   tempPknot->isValidFront_currentNuc_d=FALSE;
+
+  
 };
 
-void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
+void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count, int segmentLenght)
 {
-  int indexToAdd = segmentLenght-trackerList_Count;
-  *trackerList[indexToAdd] = y;
-  *trackerList_Count++;  
+  int count = *trackerList_Count;
+  int indexToAdd = segmentLenght-count;
+  trackerList[indexToAdd] = y;
+  trackerList_Count++;  
 };
 
 void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count)
 {
   //now remove from the front
-  for (int index = 0; index < trackerList_Count; index++)
+  int count = *trackerList_Count;
+  for (int index = 0; index < count; index++)
   {
     if (trackerList[index] == y)
     {
@@ -531,37 +538,37 @@ void ResetTracker_Back(int *trackerList, int *trackerList_Count,  int sequenceLe
 {
   for (int index =0; index < sequenceLength; index++)
   {
-    *trackerList[index]=-1;
+    trackerList[index]=-1;
   }
-  *trackerList_Count = 0; 
+  trackerList_Count = 0; 
 };
 
 void ResetTracker_Front(int *trackerList, int *trackerList_Count, int sequenceLength)
 {
   for (int index =0;index < sequenceLength;index++)
   {
-    *trackerList[index]=index+1;
+    trackerList[index]=index+1;
   }
-  *trackerList_Count = sequenceLength;
+  trackerList_Count = &sequenceLength;
 };
 
 void SetStructureCondidence(bool suspected, bool confident, bool confirmned,
                            bool *suspectedTracker, bool *confidentTracker, bool *confirmnedTracker)
 {
-  *suspectedTracker =  suspected;
-  *confidentTracker = confident;
-  *confirmnedTracker = confirmned;
+  suspectedTracker =  &suspected;
+  confidentTracker = &confident;
+  confirmnedTracker = &confirmned;
 }; 
 
-void LogFrontBackTrackers(int current_y, struct PknotDetectionData *testStructDatad)
+void LogFrontBackTrackers(int current_y, struct PknotDetectionData *testStructData)
 {
   //first go through and log front tracekrs
   //start nuc is the begining of the struct or the last nuc tested
   //current  nuc is the nuc that you are currently at now
  
-  RemoveNuc_TrackerList(current_y, testStructData->large_front_y_trackerList, testStructData->large_front_y_trackerList_Count); 
+  RemoveNuc_TrackerList(current_y, testStructData->large_front_y_trackerList, &testStructData->large_front_y_trackerList_Count); 
 
-  AddNuc_TrackerList(current_y, testStructData->large_front_y_trackerList, testStructData->large_front_y_trackerList_Count);  
+  AddNuc_TrackerList(current_y, testStructData->large_front_y_trackerList, &testStructData->large_front_y_trackerList_Count, testStructData->fullSequenceLenght);  
 }
 
 bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionData *mainStructData, fold *thefold)
@@ -604,14 +611,14 @@ bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionD
     //walker_y is the nuc after the jump
     //now work with the test structure data
 
-    struct PknotDetectionData *mainPknotStructData
-    struct PknotDetectionData *testPknotStructData
+    struct PknotDetectionData *mainPknotStructData;
+    struct PknotDetectionData *testPknotStructData;
 
-    *mainPknotStructData = mainStructData;
-    *testPknotStructData = mainStructData;
+    mainPknotStructData = mainStructData;
+    testPknotStructData = mainStructData;
 
-    *testStructData->currentNuc_y = start_d;
-    *testStructData->currentNuc_d = thefold->pairs[start_d];
+    testPknotStructData->currentNuc_y = start_d;
+    testPknotStructData->currentNuc_d = thefold->pairs[start_d];
     
 
     //new thought 6-25-22

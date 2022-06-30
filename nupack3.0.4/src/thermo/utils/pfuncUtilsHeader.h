@@ -1135,6 +1135,9 @@ typedef struct PknotDetectionData
   bool isPknot_suspected;
   bool isPknot_confident;
   bool isPknot_confirmed;
+
+  //buldge stuff
+  int unpairedGapNuc_Startindex;
 };
 
 bool WalkAndTest_Structure(int startNuc_y, int endNuc_y, bool doSmallToLargeNuc, struct PknotDetectionData *pknotData_mainStruct, fold *thefold);
@@ -1142,12 +1145,12 @@ bool TestAfterPair_LoopOrGap(int start_y, int start_d, fold *thefold);
 bool TestAfterPair_Bulge(int start_y, int start_d, int *unpairedNucStart, fold *thefold);
 bool TestAfterPair_Stack(int start_y, int start_d, fold *thefold);
 void InitalizePknotStruct(fold *thefold, struct PknotDetectionData *tempPknot);
-void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count);
+void AddNuc_TrackerList(int y, int *trackerList, int *trackerList_Count, int segmentLenght);
 void RemoveNuc_TrackerList(int y, int *trackerList, int *trackerList_Count);
 bool NucInTrackerList(int nucIndexNum, int *trakerList, int trackerList_Count);
 void ResetTracker_Back(int *trackerList, int *trackerList_Count,  int sequenceLength);
 void ResetTracker_Front(int *trackerList, int *trackerList_Count, int sequenceLength);
-void SetStructureCondidence(bool , bool , bool , bool **, bool *, bool *);
+void SetStructureCondidence(bool , bool , bool , bool *, bool *, bool *);
 void LogFrontBackTrackers(int current_y, struct PknotDetectionData *testStructDatad);
 bool TestAfterPairFound_IsPknot(int start_y, int start_d, struct PknotDetectionData *mainStructData, fold *thefold);
 
